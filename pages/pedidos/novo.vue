@@ -43,9 +43,16 @@
             <button class="btn-linha" style="color:var(--vermelho)" @click="carrinho.splice(idx,1)">Remover</button>
           </div>
 
-          <div class="grupo" style="margin-top:22px">
-            <label class="rotulo">Observacao para o atendente (opcional)</label>
-            <textarea v-model="observacao" class="campo" placeholder="Ex.: precisamos receber ate sexta-feira"></textarea>
+          <div class="grade-2" style="margin-top:22px">
+            <div class="grupo">
+              <label class="rotulo" for="retirada">Data prevista da retirada</label>
+              <input id="retirada" v-model="retirada" class="campo" type="date" :min="hoje" required />
+              <p class="mini" style="margin-top:6px">Quando sua unidade pretende buscar os produtos.</p>
+            </div>
+            <div class="grupo">
+              <label class="rotulo">Observacao para o atendente (opcional)</label>
+              <input v-model="observacao" class="campo" placeholder="Ex.: falar com a Ana na recepcao" />
+            </div>
           </div>
 
           <button class="btn btn-principal" :disabled="ocupado" @click="enviar">
@@ -63,6 +70,8 @@ definePageMeta({ layout: 'app' })
 const supa = useSupa()
 const carrinho = ref<any[]>([])
 const observacao = ref('')
+const retirada = ref('')
+const hoje = new Date().toISOString().slice(0, 10)
 const erro = ref(''); const ok = ref(''); const ocupado = ref(false)
 
 function adicionar(p: any) {
@@ -75,16 +84,18 @@ function adicionar(p: any) {
 async function enviar() {
   erro.value = ''; ok.value = ''
   if (carrinho.value.some(i => !i.qty || i.qty < 1)) { erro.value = 'Informe uma quantidade valida para cada produto.'; return }
+  if (!retirada.value) { erro.value = 'Informe a data prevista da retirada.'; return }
   ocupado.value = true
   const { data, error } = await supa.rpc('fn_create_order', {
     p_items: carrinho.value.map(i => ({ product_id: i.id, qty: i.qty })),
-    p_note: observacao.value || null
+    p_note: observacao.value || null,
+    p_pickup: retirada.value
   })
   ocupado.value = false
   if (error) { erro.value = error.message; return }
   const { data: ped } = await supa.from('orders').select('code').eq('id', data).maybeSingle()
   ok.value = ped?.code ?? 'criado'
-  carrinho.value = []; observacao.value = ''
+  carrinho.value = []; observacao.value = ''; retirada.value = ''
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 </script>

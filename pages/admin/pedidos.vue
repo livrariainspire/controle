@@ -27,7 +27,7 @@
       <TabelaVazia v-if="!filtrados.length" titulo="Nenhum pedido" texto="Nada encontrado com esses filtros." />
       <div v-else class="tabela-rolagem">
         <table class="lista">
-          <thead><tr><th>Codigo</th><th>Unidade</th><th>Solicitante</th><th>Situacao</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
+          <thead><tr><th>Codigo</th><th>Unidade</th><th>Solicitante</th><th>Situacao</th><th>Retirada prevista</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
           <tbody>
             <tr v-for="p in filtrados" :key="p.id">
               <td>
@@ -37,6 +37,7 @@
               <td>{{ p.unit_name }}</td>
               <td>{{ p.requested_by_name }}</td>
               <td><span class="selo" :class="classeSelo(p.status)">{{ rotuloSituacao(p.status) }}</span></td>
+              <td>{{ dataCurta(p.pickup_expected) }}</td>
               <td>{{ p.attendant_name || '—' }}</td>
               <td>{{ dataHora(p.created_at) }}</td>
               <td class="acoes-celula">
@@ -54,6 +55,7 @@
         <div class="entre"><span class="mini">Unidade</span><strong>{{ aberto.unit_name }}</strong></div>
         <div class="entre"><span class="mini">Solicitante</span><strong>{{ aberto.requested_by_name }}</strong></div>
         <div class="entre"><span class="mini">Criado</span><strong>{{ dataHora(aberto.created_at) }}</strong></div>
+        <div class="entre"><span class="mini">Retirada prevista</span><strong>{{ dataCurta(aberto.pickup_expected) }}</strong></div>
         <div class="entre"><span class="mini">Puxado</span><strong>{{ dataHora(aberto.claimed_at) }}</strong></div>
         <div class="entre"><span class="mini">Enviado</span><strong>{{ dataHora(aberto.completed_at) }}</strong></div>
         <div class="entre"><span class="mini">Recebido</span><strong>{{ aberto.received_by_name ? dataHora(aberto.received_at) + ' · ' + aberto.received_by_name : '—' }}</strong></div>

@@ -31,7 +31,7 @@
         texto="Quando sua unidade fizer um pedido, ele aparece aqui." />
       <div v-else class="tabela-rolagem">
         <table class="lista">
-          <thead><tr><th>Codigo</th><th>Situacao</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
+          <thead><tr><th>Codigo</th><th>Situacao</th><th>Retirada prevista</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
           <tbody>
             <tr v-for="p in filtrados" :key="p.id">
               <td>
@@ -39,6 +39,7 @@
                 <div v-if="p.parent_code" class="mini">Em espera, veio de {{ p.parent_code }}</div>
               </td>
               <td><span class="selo" :class="classeSelo(p.status)">{{ rotuloSituacao(p.status) }}</span></td>
+              <td>{{ dataCurta(p.pickup_expected) }}</td>
               <td>{{ p.attendant_name || '—' }}</td>
               <td>{{ dataHora(p.created_at) }}</td>
               <td class="acoes-celula">
@@ -56,6 +57,10 @@
       <div class="entre" style="margin-bottom:14px">
         <span class="selo" :class="classeSelo(aberto.status)">{{ rotuloSituacao(aberto.status) }}</span>
         <span class="mini">{{ dataHora(aberto.created_at) }} · {{ aberto.requested_by_name }}</span>
+      </div>
+      <div class="entre" style="margin-bottom:14px">
+        <span class="mini">Retirada prevista</span>
+        <strong>{{ dataCurta(aberto.pickup_expected) }}</strong>
       </div>
       <div v-if="aberto.parent_code" class="aviso aviso-info">
         Este pedido guarda o que faltou em {{ aberto.parent_code }} e sera atendido quando o produto chegar.

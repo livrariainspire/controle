@@ -14,12 +14,13 @@
         <TabelaVazia v-if="!abertos.length" titulo="Nada em atendimento" texto="Puxe um pedido da fila para comecar." />
         <div v-else class="tabela-rolagem">
           <table class="lista">
-            <thead><tr><th>Codigo</th><th>Unidade</th><th>Itens</th><th>Puxado em</th><th></th></tr></thead>
+            <thead><tr><th>Codigo</th><th>Unidade</th><th>Itens</th><th>Retirada prevista</th><th>Puxado em</th><th></th></tr></thead>
             <tbody>
               <tr v-for="p in abertos" :key="p.id">
                 <td><strong>{{ p.code }}</strong></td>
                 <td>{{ p.unit_name }}</td>
                 <td>{{ p.order_items.filter((i: any) => !i.removed).length }} de {{ p.order_items.length }}</td>
+                <td><strong>{{ dataCurta(p.pickup_expected) }}</strong></td>
                 <td>{{ dataHora(p.claimed_at) }}</td>
                 <td class="acoes-celula">
                   <button class="btn btn-principal btn-p" @click="abrir(p)">Abrir atendimento</button>
@@ -37,13 +38,14 @@
           texto="Pedidos aguardando a chegada de produto aparecem aqui." />
         <div v-else class="tabela-rolagem">
           <table class="lista">
-            <thead><tr><th>Codigo</th><th>Unidade</th><th>Veio de</th><th>Itens</th><th>Desde</th><th></th></tr></thead>
+            <thead><tr><th>Codigo</th><th>Unidade</th><th>Veio de</th><th>Itens</th><th>Retirada prevista</th><th>Desde</th><th></th></tr></thead>
             <tbody>
               <tr v-for="p in espera" :key="p.id">
                 <td><strong>{{ p.code }}</strong></td>
                 <td>{{ p.unit_name }}</td>
                 <td>{{ p.parent_code || '—' }}</td>
                 <td>{{ p.order_items.length }}</td>
+                <td><strong>{{ dataCurta(p.pickup_expected) }}</strong></td>
                 <td>{{ dataHora(p.created_at) }}</td>
                 <td class="acoes-celula">
                   <button class="btn btn-principal btn-p" @click="retomar(p)">O produto chegou</button>
@@ -79,6 +81,10 @@
       <div class="entre" style="margin-bottom:14px">
         <span class="selo" :class="classeSelo(atual.status)">{{ rotuloSituacao(atual.status) }}</span>
         <span class="mini">{{ atual.unit_name }} · {{ atual.requested_by_name }}</span>
+      </div>
+      <div class="entre" style="margin-bottom:14px">
+        <span class="mini">Retirada prevista</span>
+        <strong>{{ dataCurta(atual.pickup_expected) }}</strong>
       </div>
       <div v-if="atual.parent_code" class="aviso aviso-info">
         Pedido em espera criado a partir de {{ atual.parent_code }}.

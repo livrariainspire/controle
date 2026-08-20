@@ -114,6 +114,7 @@ create table if not exists public.orders (
   parent_order_id    uuid references public.orders(id) on delete set null,
   parent_code        text,
   waiting_note       text,
+  pickup_expected    date,
   received_at        timestamptz,
   received_by        uuid references auth.users(id) on delete set null,
   received_by_name   text,
@@ -128,6 +129,7 @@ create table if not exists public.orders (
 alter table public.orders add column if not exists parent_order_id  uuid references public.orders(id) on delete set null;
 alter table public.orders add column if not exists parent_code      text;
 alter table public.orders add column if not exists waiting_note     text;
+alter table public.orders add column if not exists pickup_expected  date;
 alter table public.orders add column if not exists received_at      timestamptz;
 alter table public.orders add column if not exists received_by      uuid references auth.users(id) on delete set null;
 alter table public.orders add column if not exists received_by_name text;
@@ -385,7 +387,7 @@ end $$;
 
 -- 5.3 Unidade cria pedido
 create or replace function public.fn_create_order(
-  p_items jsonb, p_note text default null
+  p_items jsonb, p_note text default null, p_pickup date default null
 ) returns uuid
 language plpgsql security definer set search_path = public as $$
 declare v_order uuid; v_unit uuid; v_role user_role; v_item jsonb; v_title text;
@@ -396,10 +398,12 @@ begin
   if v_unit is null then raise exception 'Seu usuario nao esta vinculado a uma unidade.'; end if;
   if p_items is null or jsonb_array_length(p_items) = 0 then
     raise exception 'Inclua ao menos um item no pedido.'; end if;
+  if p_pickup is null then
+    raise exception 'Informe a data prevista para a retirada.'; end if;
 
-  insert into public.orders (code, unit_id, unit_name, requested_by, requested_by_name, note)
+  insert into public.orders (code, unit_id, unit_name, requested_by, requested_by_name, note, pickup_expected)
   select 'PED-'||lpad(nextval('public.order_code_seq')::text,5,'0'),
-         u.id, u.name, auth.uid(), public.my_name(), p_note
+         u.id, u.name, auth.uid(), public.my_name(), p_note, p_pickup
     from public.units u where u.id = v_unit
   returning id, code, unit_name into v_order, v_code, v_unome;
 
@@ -413,8 +417,10 @@ begin
   end loop;
 
   perform public.fn_notify(null, null, 'atendente', 'Novo pedido na fila',
-    v_code || ' de ' || v_unome || ' com ' || v_count || ' produto(s).', 'pedido', v_order);
-  perform public.log_action('pedido_criado','orders',v_order, jsonb_build_object('itens',v_count));
+    v_code || ' de ' || v_unome || ' com ' || v_count || ' produto(s). Retirada prevista para '
+      || to_char(p_pickup, 'DD/MM/YYYY') || '.', 'pedido', v_order);
+  perform public.log_action('pedido_criado','orders',v_order,
+    jsonb_build_object('itens',v_count,'retirada_prevista',p_pickup));
   return v_order;
 end $$;
 
@@ -573,11 +579,11 @@ begin
 
     insert into public.orders (code, unit_id, unit_name, requested_by, requested_by_name,
                                attendant_id, attendant_name, status, parent_order_id, parent_code,
-                               waiting_note, claimed_at)
+                               waiting_note, pickup_expected, claimed_at)
     select 'PED-'||lpad(nextval('public.order_code_seq')::text,5,'0'),
            o.unit_id, o.unit_name, o.requested_by, o.requested_by_name,
            coalesce(o.attendant_id, auth.uid()), coalesce(o.attendant_name, public.my_name()),
-           'em_espera', o.id, o.code, p_espera_note, now()
+           'em_espera', o.id, o.code, p_espera_note, o.pickup_expected, now()
       from public.orders o where o.id = p_order
     returning id, code into v_espera, v_espera_code;
 
@@ -965,7 +971,7 @@ create policy s_comprovantes_read on storage.objects
 grant execute on function
   public.fn_approve_user(uuid,user_role,uuid),
   public.fn_set_user_status(uuid,user_status,text),
-  public.fn_create_order(jsonb,text),
+  public.fn_create_order(jsonb,text,date),
   public.fn_claim_order(uuid),
   public.fn_release_order(uuid),
   public.fn_reassign_order(uuid,uuid),

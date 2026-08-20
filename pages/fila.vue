@@ -13,13 +13,14 @@
         texto="Nenhum pedido aguardando no momento." />
       <div v-else class="tabela-rolagem">
         <table class="lista">
-          <thead><tr><th>Codigo</th><th>Unidade</th><th>Solicitante</th><th>Itens</th><th>Na fila desde</th><th></th></tr></thead>
+          <thead><tr><th>Codigo</th><th>Unidade</th><th>Solicitante</th><th>Itens</th><th>Retirada prevista</th><th>Na fila desde</th><th></th></tr></thead>
           <tbody>
             <tr v-for="p in pedidos" :key="p.id">
               <td><strong>{{ p.code }}</strong></td>
               <td>{{ p.unit_name }}</td>
               <td>{{ p.requested_by_name }}</td>
               <td>{{ p.order_items?.length ?? 0 }}</td>
+              <td><strong>{{ dataCurta(p.pickup_expected) }}</strong></td>
               <td>{{ dataHora(p.created_at) }}</td>
               <td class="acoes-celula">
                 <button class="btn btn-neutro btn-p" @click="ver(p)">Ver itens</button>
@@ -33,6 +34,10 @@
 
     <JanelaModal v-if="aberto" :titulo="`Pedido ${aberto.code}`" @fechar="aberto = null">
       <p class="mini" style="margin-bottom:14px">{{ aberto.unit_name }} · {{ aberto.requested_by_name }}</p>
+      <div class="entre" style="margin-bottom:14px">
+        <span class="mini">Retirada prevista</span>
+        <strong>{{ dataCurta(aberto.pickup_expected) }}</strong>
+      </div>
       <div v-if="aberto.note" class="aviso aviso-info">{{ aberto.note }}</div>
       <table class="lista" style="font-size:13px">
         <thead><tr><th>Produto</th><th>Quantidade</th></tr></thead>
