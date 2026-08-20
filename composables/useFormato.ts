@@ -30,7 +30,7 @@ export const rotuloSituacao = (s: string) => ({
   enviado: 'Aguardando recebimento',
   finalizado: 'Finalizado',
   cancelado: 'Cancelado',
-  pendente: 'Aguardando aprovacao',
+  pendente: 'Aguardando aprovação',
   aprovado: 'Ativo',
   rejeitado: 'Recusado',
   inativo: 'Inativo'

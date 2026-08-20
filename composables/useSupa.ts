@@ -31,6 +31,6 @@ export async function chamarApi(rota: string, corpo: Record<string, any> = {}) {
     body: JSON.stringify(corpo)
   })
   const dados = await resp.json().catch(() => ({}))
-  if (!resp.ok) throw new Error(dados.error || 'Nao foi possivel concluir a acao.')
+  if (!resp.ok) throw new Error(dados.error || 'Não foi possível concluir a ação.')
   return dados
 }

@@ -8,7 +8,7 @@
     <div v-if="msg" class="aviso" :class="erro ? 'aviso-erro' : 'aviso-ok'">{{ msg }}</div>
 
     <div v-if="aguardando.length" class="aviso aviso-atencao">
-      <strong>{{ aguardando.length }} pedido(s) aguardam sua confirmacao de recebimento.</strong>
+      <strong>{{ aguardando.length }} pedido(s) aguardam sua confirmação de recebimento.</strong>
       Abra o pedido e confirme para finalizar.
     </div>
 
@@ -18,7 +18,7 @@
       <div class="painel-topo">
         <h2>{{ filtrados.length }} pedido(s)</h2>
         <select v-model="situacao" class="campo" style="max-width:220px">
-          <option value="">Todas as situacoes</option>
+          <option value="">Todas as situações</option>
           <option value="fila">Na fila</option>
           <option value="em_atendimento">Em atendimento</option>
           <option value="em_espera">Em espera</option>
@@ -28,10 +28,10 @@
         </select>
       </div>
       <TabelaVazia v-if="!filtrados.length" titulo="Nenhum pedido"
-        texto="Quando sua unidade fizer um pedido, ele aparece aqui." />
+        texto="Quando sua filial fizer um pedido, ele aparece aqui." />
       <div v-else class="tabela-rolagem">
         <table class="lista">
-          <thead><tr><th>Codigo</th><th>Situacao</th><th>Retirada prevista</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
+          <thead><tr><th>Código</th><th>Situação</th><th>Retirada prevista</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
           <tbody>
             <tr v-for="p in filtrados" :key="p.id">
               <td>
@@ -63,7 +63,7 @@
         <strong>{{ dataCurta(aberto.pickup_expected) }}</strong>
       </div>
       <div v-if="aberto.parent_code" class="aviso aviso-info">
-        Este pedido guarda o que faltou em {{ aberto.parent_code }} e sera atendido quando o produto chegar.
+        Este pedido guarda o que faltou em {{ aberto.parent_code }} e será atendido quando o produto chegar.
       </div>
       <div v-if="aberto.note" class="aviso aviso-info">{{ aberto.note }}</div>
 
@@ -84,7 +84,7 @@
       <div v-if="aberto.status === 'enviado'" style="margin-top:20px">
         <div class="aviso aviso-atencao">Confira o que chegou e confirme para finalizar o pedido.</div>
         <div class="grupo">
-          <label class="rotulo">Observacao (opcional)</label>
+          <label class="rotulo">Observação (opcional)</label>
           <input v-model="obsRecebimento" class="campo" placeholder="Ex.: recebido em bom estado" />
         </div>
         <button class="btn btn-principal" :disabled="ocupado" @click="confirmar">
@@ -121,6 +121,7 @@ async function carregar() {
   const { data } = await supa.from('orders').select('*').order('created_at', { ascending: false })
   pedidos.value = data ?? []
   carregando.value = false
+  await abrirDoAviso()
 }
 onMounted(carregar)
 
@@ -143,8 +144,19 @@ async function confirmar() {
 
 async function cancelar(p: any) {
   if (!confirm(`Cancelar o pedido ${p.code}?`)) return
-  const { error } = await supa.rpc('fn_cancel_order', { p_order: p.id, p_reason: 'Cancelado pela unidade' })
+  const { error } = await supa.rpc('fn_cancel_order', { p_order: p.id, p_reason: 'Cancelado pela filial' })
   if (error) { erro.value = true; msg.value = error.message; return }
   carregar()
 }
+
+// abre sozinho o pedido indicado pelo aviso
+const rota = useRoute()
+async function abrirDoAviso() {
+  const id = rota.query.pedido as string | undefined
+  if (!id) return
+  const alvo = pedidos.value.find((p: any) => p.id === id)
+  if (alvo) await abrir(alvo)
+}
+watch(() => rota.query.t, abrirDoAviso)
+
 </script>

@@ -43,7 +43,7 @@ export async function sair() {
 }
 
 export const rotuloPerfil = (r?: string | null) => ({
-  admin: 'Administracao',
+  admin: 'Administração',
   atendente: 'Atendimento',
   igreja: 'Igreja da Rede',
   ponto: 'Ponto de Partida'

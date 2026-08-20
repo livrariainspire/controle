@@ -1,16 +1,16 @@
 <template>
   <div>
     <div class="cabecalho">
-      <div><h1>Usuarios</h1><p>Aprove cadastros, defina o perfil e vincule cada pessoa a sua unidade.</p></div>
-      <button class="btn btn-principal btn-p" @click="abrirNovo">Criar usuario</button>
+      <div><h1>Usuários</h1><p>Aprove cadastros, defina o perfil e vincule cada pessoa a sua filial.</p></div>
+      <button class="btn btn-principal btn-p" @click="abrirNovo">Criar usuário</button>
     </div>
 
     <div v-if="msg" class="aviso" :class="erro ? 'aviso-erro' : 'aviso-ok'">{{ msg }}</div>
-    <div v-if="carregando" class="carregando">Carregando usuarios...</div>
+    <div v-if="carregando" class="carregando">Carregando usuários...</div>
 
     <template v-else>
       <div class="painel">
-        <div class="painel-topo"><h2>Aguardando aprovacao ({{ pendentes.length }})</h2></div>
+        <div class="painel-topo"><h2>Aguardando aprovação ({{ pendentes.length }})</h2></div>
         <TabelaVazia v-if="!pendentes.length" titulo="Nenhum cadastro pendente" texto="Novos cadastros aparecem aqui." />
         <div v-else class="tabela-rolagem">
           <table class="lista">
@@ -22,7 +22,7 @@
                 <td><a :href="linkZap(u.whatsapp)" target="_blank" rel="noopener" class="zap">{{ mascaraZap(u.whatsapp) }}</a></td>
                 <td>{{ dataHora(u.created_at) }}</td>
                 <td class="acoes-celula">
-                  <button class="btn btn-principal btn-p" @click="abrirAprovacao(u)">Aprovar</button>
+                  <button class="btn btn-principal btn-p" @click="abrirEdicao(u, true)">Aprovar</button>
                   <button class="btn btn-perigo btn-p" @click="recusar(u)">Recusar</button>
                 </td>
               </tr>
@@ -33,12 +33,12 @@
 
       <div class="painel">
         <div class="painel-topo">
-          <h2>Todos os usuarios</h2>
+          <h2>Todos os usuários</h2>
           <input v-model="busca" class="campo" style="max-width:260px" type="search" placeholder="Buscar por nome ou e-mail" />
         </div>
         <div class="tabela-rolagem">
           <table class="lista">
-            <thead><tr><th>Nome</th><th>Contato</th><th>Perfil</th><th>Unidade</th><th>Situacao</th><th></th></tr></thead>
+            <thead><tr><th>Nome</th><th>Contato</th><th>Perfil</th><th>Filial</th><th>Situação</th><th></th></tr></thead>
             <tbody>
               <tr v-for="u in filtrados" :key="u.id">
                 <td><strong>{{ u.full_name || '—' }}</strong><div class="mini">{{ u.email }}</div></td>
@@ -47,7 +47,7 @@
                 <td>{{ nomeUnidade(u.unit_id) }}</td>
                 <td><span class="selo" :class="classeSelo(u.status)">{{ rotuloSituacao(u.status) }}</span></td>
                 <td class="acoes-celula">
-                  <button class="btn btn-neutro btn-p" @click="abrirAprovacao(u)">Perfil</button>
+                  <button class="btn btn-neutro btn-p" @click="abrirEdicao(u)">Editar</button>
                   <button class="btn btn-neutro btn-p" @click="abrirSenha(u)">Senha</button>
                   <button v-if="u.status === 'aprovado'" class="btn btn-neutro btn-p" @click="desativar(u)">Desativar</button>
                   <button class="btn btn-perigo btn-p" @click="abrirExclusao(u)">Excluir</button>
@@ -59,31 +59,66 @@
       </div>
     </template>
 
-    <!-- perfil / aprovacao -->
-    <JanelaModal v-if="alvo" :titulo="`Perfil de ${alvo.full_name || alvo.email}`" @fechar="alvo = null">
+    <!-- cadastro completo -->
+    <JanelaModal v-if="alvo" :titulo="`Cadastro de ${alvo.full_name || alvo.email}`" @fechar="alvo = null">
+      <div v-if="erroJanela" class="aviso aviso-erro">{{ erroJanela }}</div>
+
       <div class="grupo">
-        <label class="rotulo">Perfil de acesso</label>
-        <select v-model="papel" class="campo">
-          <option value="">Selecione</option>
-          <option value="admin">Administracao</option>
-          <option value="atendente">Atendimento</option>
-          <option value="igreja">Igreja da Rede</option>
-          <option value="ponto">Ponto de Partida</option>
-        </select>
+        <label class="rotulo">Nome completo</label>
+        <input v-model="form.full_name" class="campo" />
       </div>
-      <div v-if="papel === 'igreja' || papel === 'ponto'" class="grupo">
-        <label class="rotulo">Unidade</label>
-        <select v-model="unidade" class="campo">
-          <option value="">Selecione a unidade</option>
-          <option v-for="u in unidadesDoTipo" :key="u.id" :value="u.id">{{ u.name }}</option>
+      <div class="grade-2">
+        <div class="grupo">
+          <label class="rotulo">E-mail</label>
+          <input v-model="form.email" class="campo" type="email" />
+        </div>
+        <div class="grupo">
+          <label class="rotulo">WhatsApp</label>
+          <input :value="mascaraZap(form.whatsapp)" class="campo" inputmode="numeric"
+                 @input="e => form.whatsapp = soDigitos((e.target as HTMLInputElement).value)" />
+        </div>
+      </div>
+      <div class="grade-2">
+        <div class="grupo">
+          <label class="rotulo">Perfil de acesso</label>
+          <select v-model="form.role" class="campo">
+            <option value="">Selecione</option>
+            <option value="admin">Administração</option>
+            <option value="atendente">Atendimento</option>
+            <option value="igreja">Igreja da Rede</option>
+            <option value="ponto">Ponto de Partida</option>
+          </select>
+        </div>
+        <div class="grupo">
+          <label class="rotulo">Situação</label>
+          <select v-model="form.status" class="campo">
+            <option value="aprovado">Ativo</option>
+            <option value="pendente">Aguardando aprovação</option>
+            <option value="inativo">Inativo</option>
+            <option value="rejeitado">Recusado</option>
+          </select>
+        </div>
+      </div>
+      <div v-if="form.role === 'igreja' || form.role === 'ponto'" class="grupo">
+        <label class="rotulo">Filial</label>
+        <select v-model="form.unit_id" class="campo">
+          <option value="">Selecione a filial</option>
+          <option v-for="u in filiaisDoTipo" :key="u.id" :value="u.id">{{ u.name }}</option>
         </select>
-        <p v-if="!unidadesDoTipo.length" class="mini" style="margin-top:8px">
-          Nenhuma unidade deste tipo cadastrada. Cadastre em "Unidades".
+        <p v-if="!filiaisDoTipo.length" class="mini" style="margin-top:8px">
+          Nenhuma filial deste tipo cadastrada. Cadastre em "Filiais".
         </p>
       </div>
+      <div class="grupo">
+        <label class="rotulo">Observação interna (opcional)</label>
+        <input v-model="form.note" class="campo" placeholder="Anotação visível só para a administração" />
+      </div>
+
       <template #acoes>
         <button class="btn btn-neutro btn-p" @click="alvo = null">Cancelar</button>
-        <button class="btn btn-principal btn-p" style="width:auto" :disabled="ocupado" @click="aprovar">Salvar e liberar acesso</button>
+        <button class="btn btn-principal btn-p" style="width:auto" :disabled="ocupado" @click="salvarCadastro">
+          {{ ocupado ? 'Salvando...' : 'Salvar cadastro' }}
+        </button>
       </template>
     </JanelaModal>
 
@@ -91,7 +126,7 @@
     <JanelaModal v-if="alvoSenha" :titulo="`Nova senha de ${alvoSenha.full_name || alvoSenha.email}`" @fechar="alvoSenha = null">
       <div class="grupo">
         <label class="rotulo">Nova senha</label>
-        <input v-model="senhaNova" class="campo" placeholder="Minimo 8 caracteres" />
+        <input v-model="senhaNova" class="campo" placeholder="Mínimo 8 caracteres" />
       </div>
       <p class="mini">Informe a nova senha para a pessoa pelo WhatsApp. Ela pode trocar depois em "Minha conta".</p>
       <template #acoes>
@@ -103,8 +138,8 @@
     <!-- excluir usuario -->
     <JanelaModal v-if="alvoExcluir" :titulo="`Excluir ${alvoExcluir.full_name || alvoExcluir.email}`" @fechar="alvoExcluir = null">
       <p style="font-size:14px;line-height:1.6;color:var(--texto)">
-        A conta e o acesso serao apagados definitivamente. Pedidos, vendas e registros
-        feitos por esta pessoa continuam no historico com o nome dela.
+        A conta e o acesso serão apagados definitivamente. Pedidos, vendas e registros
+        feitos por esta pessoa continuam no histórico com o nome dela.
       </p>
       <div v-if="resumoExclusao" class="painel" style="margin-top:16px">
         <div class="painel-corpo pilha">
@@ -127,7 +162,7 @@
     </JanelaModal>
 
     <!-- criar usuario -->
-    <JanelaModal v-if="novo" titulo="Criar usuario" @fechar="novo = null">
+    <JanelaModal v-if="novo" titulo="Criar usuário" @fechar="novo = null">
       <div class="grupo"><label class="rotulo">Nome completo</label><input v-model="novo.full_name" class="campo" /></div>
       <div class="grupo"><label class="rotulo">E-mail</label><input v-model="novo.email" class="campo" type="email" /></div>
       <div class="grupo">
@@ -135,19 +170,19 @@
         <input :value="mascaraZap(novo.whatsapp)" class="campo" inputmode="numeric"
                @input="e => novo.whatsapp = soDigitos((e.target as HTMLInputElement).value)" />
       </div>
-      <div class="grupo"><label class="rotulo">Senha provisoria</label><input v-model="novo.password" class="campo" placeholder="Minimo 8 caracteres" /></div>
+      <div class="grupo"><label class="rotulo">Senha provisoria</label><input v-model="novo.password" class="campo" placeholder="Mínimo 8 caracteres" /></div>
       <div class="grupo">
         <label class="rotulo">Perfil</label>
         <select v-model="novo.role" class="campo">
           <option value="">Deixar pendente</option>
-          <option value="admin">Administracao</option>
+          <option value="admin">Administração</option>
           <option value="atendente">Atendimento</option>
           <option value="igreja">Igreja da Rede</option>
           <option value="ponto">Ponto de Partida</option>
         </select>
       </div>
       <div v-if="novo.role === 'igreja' || novo.role === 'ponto'" class="grupo">
-        <label class="rotulo">Unidade</label>
+        <label class="rotulo">Filial</label>
         <select v-model="novo.unit_id" class="campo">
           <option value="">Selecione</option>
           <option v-for="u in unidades.filter(x => x.type === novo.role)" :key="u.id" :value="u.id">{{ u.name }}</option>
@@ -155,7 +190,7 @@
       </div>
       <template #acoes>
         <button class="btn btn-neutro btn-p" @click="novo = null">Cancelar</button>
-        <button class="btn btn-principal btn-p" style="width:auto" :disabled="ocupado" @click="criar">Criar usuario</button>
+        <button class="btn btn-principal btn-p" style="width:auto" :disabled="ocupado" @click="criar">Criar usuário</button>
       </template>
     </JanelaModal>
   </div>
@@ -171,7 +206,9 @@ const carregando = ref(true)
 const busca = ref('')
 const msg = ref(''); const erro = ref(false); const ocupado = ref(false)
 
-const alvo = ref<any>(null); const papel = ref(''); const unidade = ref('')
+const alvo = ref<any>(null)
+const form = ref<any>({})
+const erroJanela = ref('')
 const alvoSenha = ref<any>(null); const senhaNova = ref('')
 const novo = ref<any>(null)
 const alvoExcluir = ref<any>(null)
@@ -184,7 +221,7 @@ const filtrados = computed(() => {
   if (!t) return usuarios.value
   return usuarios.value.filter(u => `${u.full_name} ${u.email}`.toLowerCase().includes(t))
 })
-const unidadesDoTipo = computed(() => unidades.value.filter(u => u.type === papel.value))
+const filiaisDoTipo = computed(() => unidades.value.filter(u => u.type === form.value.role))
 const nomeUnidade = (id: string | null) => unidades.value.find(u => u.id === id)?.name ?? '—'
 
 async function carregar() {
@@ -198,22 +235,57 @@ async function carregar() {
 }
 onMounted(carregar)
 
-function abrirAprovacao(u: any) { alvo.value = u; papel.value = u.role ?? ''; unidade.value = u.unit_id ?? '' }
+function abrirEdicao(u: any, aprovando = false) {
+  alvo.value = u
+  erroJanela.value = ''
+  form.value = {
+    full_name: u.full_name ?? '',
+    email: u.email ?? '',
+    whatsapp: u.whatsapp ?? '',
+    role: u.role ?? '',
+    unit_id: u.unit_id ?? '',
+    status: aprovando ? 'aprovado' : u.status,
+    note: u.note ?? ''
+  }
+}
 function abrirSenha(u: any) { alvoSenha.value = u; senhaNova.value = '' }
 function abrirNovo() { novo.value = { full_name: '', email: '', whatsapp: '', password: '', role: '', unit_id: '' } }
 
-async function aprovar() {
-  msg.value = ''
-  if (!papel.value) { erro.value = true; msg.value = 'Selecione o perfil.'; return }
-  if (['igreja', 'ponto'].includes(papel.value) && !unidade.value) { erro.value = true; msg.value = 'Selecione a unidade.'; return }
+async function salvarCadastro() {
+  erroJanela.value = ''
+  const f = form.value
+
+  if (!f.full_name.trim()) { erroJanela.value = 'Informe o nome completo.'; return }
+  if (!f.email.trim()) { erroJanela.value = 'Informe o e-mail.'; return }
+  if (f.status === 'aprovado' && !f.role) { erroJanela.value = 'Selecione o perfil de acesso.'; return }
+  if (['igreja', 'ponto'].includes(f.role) && !f.unit_id) { erroJanela.value = 'Selecione a filial.'; return }
+
   ocupado.value = true
-  const { error } = await supa.rpc('fn_approve_user', {
-    p_user: alvo.value.id, p_role: papel.value, p_unit: unidade.value || null
-  })
-  ocupado.value = false
-  erro.value = !!error
-  msg.value = error ? error.message : 'Acesso liberado.'
-  if (!error) { alvo.value = null; carregar() }
+  try {
+    // o e-mail de acesso vive fora da tabela de perfis
+    if (f.email.trim().toLowerCase() !== (alvo.value.email ?? '').toLowerCase()) {
+      await chamarApi('/update-user', { user_id: alvo.value.id, email: f.email.trim() })
+    }
+
+    const { error } = await supa.from('profiles').update({
+      full_name: f.full_name.trim(),
+      email: f.email.trim().toLowerCase(),
+      whatsapp: soDigitos(f.whatsapp),
+      role: f.role || null,
+      unit_id: ['igreja', 'ponto'].includes(f.role) ? f.unit_id : null,
+      status: f.status,
+      note: f.note || null,
+      approved_at: f.status === 'aprovado' ? new Date().toISOString() : null
+    }).eq('id', alvo.value.id)
+    if (error) throw new Error(error.message)
+
+    erro.value = false; msg.value = 'Cadastro atualizado.'
+    alvo.value = null; carregar()
+  } catch (e: any) {
+    erroJanela.value = e.message
+  } finally {
+    ocupado.value = false
+  }
 }
 
 async function recusar(u: any) {
@@ -238,7 +310,7 @@ async function excluirUsuario() {
   msg.value = ''; ocupado.value = true
   try {
     await chamarApi('/delete-user', { user_id: alvoExcluir.value.id })
-    erro.value = false; msg.value = 'Usuario excluido.'
+    erro.value = false; msg.value = 'Usuário excluido.'
     alvoExcluir.value = null; carregar()
   } catch (e: any) { erro.value = true; msg.value = e.message }
   ocupado.value = false
@@ -260,7 +332,7 @@ async function criar() {
   msg.value = ''; ocupado.value = true
   try {
     await chamarApi('/create-user', novo.value)
-    erro.value = false; msg.value = 'Usuario criado.'
+    erro.value = false; msg.value = 'Usuário criado.'
     novo.value = null; carregar()
   } catch (e: any) { erro.value = true; msg.value = e.message }
   ocupado.value = false

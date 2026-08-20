@@ -2,7 +2,7 @@
   <div>
     <div ref="caixa" class="chat-caixa">
       <p v-if="!mensagens.length" class="mini centro" style="padding:20px">
-        Ainda nao ha mensagens. Escreva a primeira.
+        Ainda não ha mensagens. Escreva a primeira.
       </p>
       <template v-else>
         <div v-for="m in mensagens" :key="m.id"
@@ -23,7 +23,7 @@
         Enviar
       </button>
     </div>
-    <p v-else class="mini centro" style="margin-top:10px">Este pedido esta encerrado. A conversa fica so no historico.</p>
+    <p v-else class="mini centro" style="margin-top:10px">Este pedido está encerrado. A conversa fica só no histórico.</p>
   </div>
 </template>
 
@@ -83,7 +83,7 @@ async function enviar() {
 .chat-sistema { max-width: 100%; }
 .chat-sistema .chat-texto {
   background: transparent; border: 0; border-left: 3px solid var(--linha);
-  border-radius: 0; color: var(--texto); font-size: 12.5px; font-style: italic; padding: 2px 0 2px 12px;
+  border-radius: 0; color: var(--texto); font-size: 12.5px; padding: 2px 0 2px 12px;
 }
 .chat-sistema .chat-hora { padding-left: 15px; }
 .chat-envio { display: flex; gap: 10px; margin-top: 12px; }

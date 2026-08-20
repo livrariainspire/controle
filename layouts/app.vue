@@ -37,16 +37,17 @@ const links = computed(() => {
   if (r === 'admin') return [
     { nome: 'Painel', para: '/painel' },
     { nome: 'Pedidos', para: '/admin/pedidos' },
-    { nome: 'Catalogo', para: '/admin/catalogo' },
-    { nome: 'Unidades', para: '/admin/unidades' },
-    { nome: 'Usuarios', para: '/admin/usuarios' },
-    { nome: 'Relatorios', para: '/admin/relatorios' },
+    { nome: 'Catálogo', para: '/admin/catalogo' },
+    { nome: 'Filiais', para: '/admin/filiais' },
+    { nome: 'Usuários', para: '/admin/usuarios' },
+    { nome: 'Relatórios', para: '/relatorios' },
     { nome: 'Registros', para: '/admin/registros' }
   ]
   if (r === 'atendente') return [
     { nome: 'Painel', para: '/painel' },
     { nome: 'Fila de pedidos', para: '/fila' },
     { nome: 'Meus atendimentos', para: '/atendimentos' },
+    { nome: 'Relatórios', para: '/relatorios' },
     { nome: 'Minha conta', para: '/conta' }
   ]
   return [

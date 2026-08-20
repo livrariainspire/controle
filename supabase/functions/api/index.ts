@@ -77,8 +77,8 @@ async function perfilPorEmail(email: string) {
 function corpoEmail(codigo: string, finalidade: string) {
   const titulo = finalidade === "cadastro" ? "Confirme seu e-mail" : "Recuperar sua senha";
   const frase = finalidade === "cadastro"
-    ? "Voce esta criando uma conta no Order Book, o sistema de pedidos da Livraria Inspire."
-    : "Voce pediu para criar uma nova senha no Order Book, o sistema de pedidos da Livraria Inspire.";
+    ? "Você está criando uma conta no Order Book, o sistema de pedidos da Livraria Inspire."
+    : "Você pediu para criar uma nova senha no Order Book, o sistema de pedidos da Livraria Inspire.";
 
   return '<!doctype html><html lang="pt-BR"><body style="margin:0;padding:0;background:#fdf7f4;font-family:Helvetica,Arial,sans-serif">'
     + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#fdf7f4;padding:32px 16px"><tr><td align="center">'
@@ -88,7 +88,7 @@ function corpoEmail(codigo: string, finalidade: string) {
     + '<p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#6f5d55">' + frase + '</p>'
     + '<p style="margin:0 0 8px;font-size:13px;color:#6f5d55">Seu codigo:</p>'
     + '<div style="background:#fdece6;border-radius:12px;padding:18px;text-align:center;margin-bottom:22px">'
-    + '<span style="font-size:34px;font-weight:bold;letter-spacing:10px;color:#d9451d">' + codigo + '</span></div>'
+    + '<span style="font-size:34px;font-weight:bold;letter-spacing:10px;color:#d9451d">' + código + '</span></div>'
     + '<p style="margin:0 0 6px;font-size:14px;line-height:1.6;color:#6f5d55">Digite esse codigo na tela do sistema para continuar. Ele vale por ' + VALIDADE_MIN + ' minutos.</p>'
     + '<p style="margin:0;font-size:13px;line-height:1.6;color:#a08e86">Se nao foi voce quem pediu, pode ignorar esta mensagem.</p>'
     + '</td></tr></table>'
@@ -98,7 +98,7 @@ function corpoEmail(codigo: string, finalidade: string) {
 
 async function enviarBrevo(email: string, codigo: string, finalidade: string) {
   if (!BREVO_API_KEY) {
-    throw new Error("O envio de e-mail ainda nao foi configurado. Fale com a administracao.");
+    throw new Error("O envio de e-mail ainda não foi configurado. Fale com a administração.");
   }
 
   const resp = await fetch("https://api.brevo.com/v3/smtp/email", {
@@ -112,15 +112,15 @@ async function enviarBrevo(email: string, codigo: string, finalidade: string) {
       sender: { name: BREVO_NAME, email: BREVO_SENDER },
       to: [{ email }],
       subject: finalidade === "cadastro"
-        ? codigo + " e o seu codigo de confirmacao"
-        : codigo + " e o seu codigo para criar uma nova senha",
+        ? codigo + " e o seu código de confirmação"
+        : codigo + " e o seu código para criar uma nova senha",
       htmlContent: corpoEmail(codigo, finalidade),
     }),
   });
 
   if (!resp.ok) {
     console.error("Brevo respondeu", resp.status, await resp.text());
-    throw new Error("Nao foi possivel enviar o e-mail agora. Tente de novo em alguns minutos.");
+    throw new Error("Não foi possível enviar o e-mail agora. Tente de novo em alguns minutos.");
   }
 }
 
@@ -134,7 +134,7 @@ async function criarEEnviarCodigo(email: string, finalidade: string) {
     .eq("email", email).eq("purpose", finalidade).gte("created_at", desde);
 
   if ((count ?? 0) >= MAX_ENVIOS_HORA) {
-    throw new Error("Voce pediu codigos demais na ultima hora. Aguarde um pouco e tente de novo.");
+    throw new Error("Você pediu codigos demais na última hora. Aguarde um pouco e tente de novo.");
   }
 
   await admin.from("email_codes")
@@ -148,34 +148,34 @@ async function criarEEnviarCodigo(email: string, finalidade: string) {
     code_hash: await hash(email, codigo),
     expires_at: new Date(Date.now() + VALIDADE_MIN * 60000).toISOString(),
   });
-  if (error) throw new Error("Nao foi possivel gerar o codigo. Tente de novo.");
+  if (error) throw new Error("Não foi possível gerar o código. Tente de novo.");
 
   await enviarBrevo(email, codigo, finalidade);
 }
 
 async function conferirCodigo(email: string, codigo: unknown, finalidade: string): Promise<string | null> {
   const limpo = soDigitos(codigo);
-  if (limpo.length !== 6) return "Digite os 6 numeros do codigo.";
+  if (limpo.length !== 6) return "Digite os 6 números do código.";
 
   const { data: reg } = await admin
     .from("email_codes").select("*")
     .eq("email", email).eq("purpose", finalidade).is("used_at", null)
     .order("created_at", { ascending: false }).limit(1).maybeSingle();
 
-  if (!reg) return "Nenhum codigo em aberto para este e-mail. Peca um novo.";
-  if (new Date(reg.expires_at) < new Date()) return "Este codigo expirou. Peca um novo.";
+  if (!reg) return "Nenhum código em aberto para este e-mail. Peça um novo.";
+  if (new Date(reg.expires_at) < new Date()) return "Este código expirou. Peça um novo.";
 
   if (reg.attempts >= MAX_TENTATIVAS) {
     await admin.from("email_codes").update({ used_at: new Date().toISOString() }).eq("id", reg.id);
-    return "Codigo bloqueado por excesso de tentativas. Peca um novo.";
+    return "Código bloqueado por excesso de tentativas. Peça um novo.";
   }
 
   if (reg.code_hash !== await hash(email, limpo)) {
     await admin.from("email_codes").update({ attempts: reg.attempts + 1 }).eq("id", reg.id);
     const restam = MAX_TENTATIVAS - (reg.attempts + 1);
     return restam > 0
-      ? "Codigo incorreto. Voce ainda tem " + restam + " tentativa(s)."
-      : "Codigo incorreto. Peca um novo codigo.";
+      ? "Código incorreto. Você ainda tem " + restam + " tentativa(s)."
+      : "Código incorreto. Peça um novo código.";
   }
 
   await admin.from("email_codes").update({ used_at: new Date().toISOString() }).eq("id", reg.id);
@@ -199,7 +199,7 @@ async function exigirAdmin(req: Request) {
     .from("profiles").select("id, full_name, role, status").eq("id", data.user.id).single();
 
   if (!perfil || perfil.role !== "admin" || perfil.status !== "aprovado") {
-    return { error: "Esta acao e exclusiva da administracao." };
+    return { error: "Esta ação é exclusiva da administração." };
   }
   return { user: data.user, perfil };
 }
@@ -230,7 +230,7 @@ Deno.serve(async (req) => {
 
     if (rota === "/cadastro/codigo") {
       const email = normalizaEmail(corpo.email);
-      if (!emailValido(email)) return json({ error: "Informe um e-mail valido." }, 400);
+      if (!emailValido(email)) return json({ error: "Informe um e-mail válido." }, 400);
       if (await perfilPorEmail(email)) {
         return json({ error: 'Este e-mail ja tem cadastro. Use "Esqueci minha senha".' }, 400);
       }
@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
       const email = normalizaEmail(corpo.email);
       const { code, full_name, whatsapp, password } = corpo;
 
-      if (!emailValido(email)) return json({ error: "Informe um e-mail valido." }, 400);
+      if (!emailValido(email)) return json({ error: "Informe um e-mail válido." }, 400);
       if (!full_name || String(full_name).trim().length < 3) return json({ error: "Informe seu nome completo." }, 400);
       if (!password || String(password).length < 8) return json({ error: "A senha precisa ter ao menos 8 caracteres." }, 400);
       if (await perfilPorEmail(email)) return json({ error: "Este e-mail ja tem cadastro." }, 400);
@@ -256,13 +256,13 @@ Deno.serve(async (req) => {
         email_confirm: true,
         user_metadata: { full_name: String(full_name).trim(), whatsapp: soDigitos(whatsapp) },
       });
-      if (error) return json({ error: "Nao foi possivel concluir o cadastro: " + error.message }, 400);
+      if (error) return json({ error: "Não foi possível concluir o cadastro: " + error.message }, 400);
       return json({ ok: true });
     }
 
     if (rota === "/senha/codigo") {
       const email = normalizaEmail(corpo.email);
-      if (!emailValido(email)) return json({ error: "Informe um e-mail valido." }, 400);
+      if (!emailValido(email)) return json({ error: "Informe um e-mail válido." }, 400);
       // resposta igual exista ou nao a conta, para nao revelar cadastros
       if (await perfilPorEmail(email)) await criarEEnviarCodigo(email, "recuperacao");
       return json({ ok: true });
@@ -278,12 +278,12 @@ Deno.serve(async (req) => {
       if (problema) return json({ error: problema }, 400);
 
       const perfil = await perfilPorEmail(email);
-      if (!perfil) return json({ error: "Conta nao encontrada." }, 400);
+      if (!perfil) return json({ error: "Conta não encontrada." }, 400);
 
       const { error } = await admin.auth.admin.updateUserById(perfil.id, {
         password: String(password), email_confirm: true,
       });
-      if (error) return json({ error: "Nao foi possivel trocar a senha: " + error.message }, 400);
+      if (error) return json({ error: "Não foi possível trocar a senha: " + error.message }, 400);
 
       await registrar(null, perfil.full_name || email, "senha_recuperada", perfil.id, {});
       return json({ ok: true });
@@ -324,9 +324,30 @@ Deno.serve(async (req) => {
         return json({ ok: true, user_id: novoId });
       }
 
+      case "/update-user": {
+        const { user_id } = corpo;
+        const novoEmail = normalizaEmail(corpo.email);
+        if (!user_id) return json({ error: "Informe o usuário." }, 400);
+        if (!emailValido(novoEmail)) return json({ error: "Informe um e-mail válido." }, 400);
+
+        const jaUsado = await perfilPorEmail(novoEmail);
+        if (jaUsado && jaUsado.id !== user_id) {
+          return json({ error: "Este e-mail já pertence a outro cadastro." }, 400);
+        }
+
+        const { error } = await admin.auth.admin.updateUserById(user_id, {
+          email: novoEmail, email_confirm: true,
+        });
+        if (error) return json({ error: error.message }, 400);
+
+        await admin.from("profiles").update({ email: novoEmail }).eq("id", user_id);
+        await registrar(user.id, perfil.full_name, "email_alterado", user_id, { email: novoEmail });
+        return json({ ok: true });
+      }
+
       case "/set-password": {
         const { user_id, password } = corpo;
-        if (!user_id || !password) return json({ error: "Informe o usuario e a nova senha." }, 400);
+        if (!user_id || !password) return json({ error: "Informe o usuário e a nova senha." }, 400);
         if (String(password).length < 8) return json({ error: "A senha precisa ter ao menos 8 caracteres." }, 400);
         const { error } = await admin.auth.admin.updateUserById(user_id, { password: String(password) });
         if (error) return json({ error: error.message }, 400);
@@ -336,8 +357,8 @@ Deno.serve(async (req) => {
 
       case "/delete-user": {
         const { user_id } = corpo;
-        if (!user_id) return json({ error: "Informe o usuario." }, 400);
-        if (user_id === user.id) return json({ error: "Voce nao pode excluir a propria conta." }, 400);
+        if (!user_id) return json({ error: "Informe o usuário." }, 400);
+        if (user_id === user.id) return json({ error: "Você não pode excluir a própria conta." }, 400);
         const { error } = await admin.auth.admin.deleteUser(user_id);
         if (error) return json({ error: error.message }, 400);
         await registrar(user.id, perfil.full_name, "usuario_excluido", user_id, {});
@@ -345,7 +366,7 @@ Deno.serve(async (req) => {
       }
 
       default:
-        return json({ error: "Rota nao encontrada." }, 404);
+        return json({ error: "Rota não encontrada." }, 404);
     }
   } catch (e) {
     return json({ error: String((e as Error).message ?? e) }, 400);

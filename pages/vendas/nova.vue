@@ -24,20 +24,20 @@
       </div>
       <div class="painel-corpo">
         <TabelaVazia v-if="!carrinho.length" titulo="Nenhum produto"
-          texto="Busque acima entre os produtos disponiveis no seu estoque." />
+          texto="Busque acima entre os produtos disponíveis no seu estoque." />
         <template v-else>
           <div v-for="(i, idx) in carrinho" :key="i.id" class="carrinho-item">
             <FotoProduto :url="i.photo_url" :titulo="i.title" :tipo="i.type" />
             <div class="cresce">
               <div class="produto-nome">{{ i.title }}</div>
-              <div class="produto-meta">Disponivel: {{ i.estoque }}</div>
+              <div class="produto-meta">Disponível: {{ i.estoque }}</div>
             </div>
             <div>
               <label class="rotulo" style="margin-bottom:4px">Qtd</label>
               <input v-model.number="i.qty" class="campo qtd" type="number" min="1" :max="i.estoque" />
             </div>
             <div>
-              <label class="rotulo" style="margin-bottom:4px">Valor unitario</label>
+              <label class="rotulo" style="margin-bottom:4px">Valor unitário</label>
               <input v-model.number="i.unit_price" class="campo preco" type="number" min="0" step="0.01" placeholder="0,00" />
             </div>
             <button class="btn-linha" style="color:var(--vermelho)" @click="carrinho.splice(idx,1)">Remover</button>
@@ -51,7 +51,7 @@
       <div class="painel-corpo">
         <EnvioFoto @arquivo="f => arquivo = f" />
         <div class="grupo" style="margin-top:18px">
-          <label class="rotulo">Observacao (opcional)</label>
+          <label class="rotulo">Observação (opcional)</label>
           <textarea v-model="observacao" class="campo" placeholder="Ex.: venda no culto de domingo"></textarea>
         </div>
         <button class="btn btn-principal" :disabled="ocupado || !carrinho.length" @click="salvar">
@@ -86,9 +86,9 @@ async function salvar() {
   erro.value = ''; ok.value = ''
   for (const i of carrinho.value) {
     if (!i.qty || i.qty < 1) { erro.value = `Informe a quantidade de "${i.title}".`; return }
-    if (i.qty > i.estoque) { erro.value = `Voce tem apenas ${i.estoque} de "${i.title}" em estoque.`; return }
+    if (i.qty > i.estoque) { erro.value = `Você tem apenas ${i.estoque} de "${i.title}" em estoque.`; return }
     if (i.unit_price === null || i.unit_price === '' || Number(i.unit_price) < 0) {
-      erro.value = `Informe o valor unitario de "${i.title}".`; return
+      erro.value = `Informe o valor unitário de "${i.title}".`; return
     }
   }
   if (!arquivo.value) { erro.value = 'Anexe a foto do comprovante da venda.'; return }
@@ -98,7 +98,7 @@ async function salvar() {
     const ext = (arquivo.value.name.split('.').pop() || 'jpg').toLowerCase()
     const caminho = `${unidadeId.value}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`
     const up = await supa.storage.from('comprovantes').upload(caminho, arquivo.value, { upsert: false })
-    if (up.error) throw new Error('Nao foi possivel enviar a foto: ' + up.error.message)
+    if (up.error) throw new Error('Não foi possível enviar a foto: ' + up.error.message)
 
     const { data, error } = await supa.rpc('fn_create_sale', {
       p_items: carrinho.value.map(i => ({ product_id: i.id, qty: i.qty, unit_price: Number(i.unit_price) })),

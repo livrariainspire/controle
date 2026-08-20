@@ -15,7 +15,7 @@ export default defineNuxtConfig({
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'theme-color', content: '#F05A33' },
-        { name: 'description', content: 'Gestao de pedidos, estoque e vendas da Livraria Inspire.' }
+        { name: 'description', content: 'Gestão de pedidos, estoque e vendas da Livraria Inspire.' }
       ],
       link: [
         { rel: 'icon', type: 'image/png', href: base + 'logo-inspire.png' },

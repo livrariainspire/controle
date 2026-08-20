@@ -3,7 +3,7 @@
     <div class="cabecalho">
       <div>
         <h1>Fazer um pedido</h1>
-        <p>Busque no catalogo, informe as quantidades e envie para a livraria.</p>
+        <p>Busque no catálogo, informe as quantidades e envie para a livraria.</p>
       </div>
     </div>
 
@@ -15,7 +15,7 @@
 
     <div class="painel">
       <div class="painel-topo"><h2>1. Escolher os produtos</h2>
-        <span class="mini">Tudo o que sua unidade pode pedir</span></div>
+        <span class="mini">Tudo o que sua filial pode pedir</span></div>
       <div class="painel-corpo">
         <BuscaProdutos :escolhidos="carrinho.map((i: any) => i.id)" @escolher="adicionar" />
       </div>
@@ -47,11 +47,11 @@
             <div class="grupo">
               <label class="rotulo" for="retirada">Data prevista da retirada</label>
               <input id="retirada" v-model="retirada" class="campo" type="date" :min="hoje" required />
-              <p class="mini" style="margin-top:6px">Quando sua unidade pretende buscar os produtos.</p>
+              <p class="mini" style="margin-top:6px">Quando sua filial pretende buscar os produtos.</p>
             </div>
             <div class="grupo">
-              <label class="rotulo">Observacao para o atendente (opcional)</label>
-              <input v-model="observacao" class="campo" placeholder="Ex.: falar com a Ana na recepcao" />
+              <label class="rotulo">Observação para o atendente (opcional)</label>
+              <input v-model="observacao" class="campo" placeholder="Ex.: falar com a Ana na recepção" />
             </div>
           </div>
 
@@ -83,7 +83,7 @@ function adicionar(p: any) {
 
 async function enviar() {
   erro.value = ''; ok.value = ''
-  if (carrinho.value.some(i => !i.qty || i.qty < 1)) { erro.value = 'Informe uma quantidade valida para cada produto.'; return }
+  if (carrinho.value.some(i => !i.qty || i.qty < 1)) { erro.value = 'Informe uma quantidade válida para cada produto.'; return }
   if (!retirada.value) { erro.value = 'Informe a data prevista da retirada.'; return }
   ocupado.value = true
   const { data, error } = await supa.rpc('fn_create_order', {

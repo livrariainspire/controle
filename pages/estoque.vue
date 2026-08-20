@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="cabecalho">
-      <div><h1>Meu estoque</h1><p>O que sua unidade recebeu e ainda nao vendeu.</p></div>
+      <div><h1>Meu estoque</h1><p>O que sua filial recebeu e ainda não vendeu.</p></div>
       <NuxtLink to="/vendas/nova" class="btn btn-principal btn-p">Registrar venda</NuxtLink>
     </div>
 

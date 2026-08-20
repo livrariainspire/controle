@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="cabecalho">
-      <div><h1>Pedidos</h1><p>Todos os pedidos da rede. Voce pode redirecionar um atendimento para outro atendente.</p></div>
+      <div><h1>Pedidos</h1><p>Todos os pedidos da rede. Você pode redirecionar um atendimento para outro atendente.</p></div>
       <button class="btn btn-neutro btn-p" @click="carregar">Atualizar</button>
     </div>
 
@@ -13,7 +13,7 @@
         <h2>{{ filtrados.length }} pedido(s)</h2>
         <div class="linha-acoes">
           <select v-model="situacao" class="campo" style="max-width:200px">
-            <option value="">Todas as situacoes</option>
+            <option value="">Todas as situações</option>
             <option value="fila">Na fila</option>
             <option value="em_atendimento">Em atendimento</option>
             <option value="em_espera">Em espera</option>
@@ -21,13 +21,13 @@
             <option value="finalizado">Finalizado</option>
             <option value="cancelado">Cancelado</option>
           </select>
-          <input v-model="busca" class="campo" style="max-width:220px" type="search" placeholder="Codigo ou unidade" />
+          <input v-model="busca" class="campo" style="max-width:220px" type="search" placeholder="Código ou filial" />
         </div>
       </div>
       <TabelaVazia v-if="!filtrados.length" titulo="Nenhum pedido" texto="Nada encontrado com esses filtros." />
       <div v-else class="tabela-rolagem">
         <table class="lista">
-          <thead><tr><th>Codigo</th><th>Unidade</th><th>Solicitante</th><th>Situacao</th><th>Retirada prevista</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
+          <thead><tr><th>Código</th><th>Filial</th><th>Solicitante</th><th>Situação</th><th>Retirada prevista</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
           <tbody>
             <tr v-for="p in filtrados" :key="p.id">
               <td>
@@ -52,7 +52,7 @@
 
     <JanelaModal v-if="aberto" :titulo="`Pedido ${aberto.code}`" @fechar="aberto = null">
       <div class="pilha" style="margin-bottom:16px">
-        <div class="entre"><span class="mini">Unidade</span><strong>{{ aberto.unit_name }}</strong></div>
+        <div class="entre"><span class="mini">Filial</span><strong>{{ aberto.unit_name }}</strong></div>
         <div class="entre"><span class="mini">Solicitante</span><strong>{{ aberto.requested_by_name }}</strong></div>
         <div class="entre"><span class="mini">Criado</span><strong>{{ dataHora(aberto.created_at) }}</strong></div>
         <div class="entre"><span class="mini">Retirada prevista</span><strong>{{ dataCurta(aberto.pickup_expected) }}</strong></div>
@@ -88,7 +88,7 @@
           <option v-for="a in atendentes" :key="a.id" :value="a.id">{{ a.full_name || a.email }}</option>
         </select>
       </div>
-      <p class="mini">O pedido passa para o atendente escolhido e o registro fica salvo no historico.</p>
+      <p class="mini">O pedido passa para o atendente escolhido e o registro fica salvo no histórico.</p>
       <template #acoes>
         <button class="btn btn-neutro btn-p" @click="transferir = null">Cancelar</button>
         <button class="btn btn-principal btn-p" style="width:auto" :disabled="ocupado" @click="confirmarTransferencia">Redirecionar</button>
@@ -126,6 +126,7 @@ async function carregar() {
   pedidos.value = p.data ?? []
   atendentes.value = a.data ?? []
   carregando.value = false
+  await abrirDoAviso()
 }
 onMounted(carregar)
 
@@ -144,4 +145,15 @@ async function confirmarTransferencia() {
   msg.value = error ? error.message : `Pedido ${transferir.value.code} redirecionado.`
   if (!error) { transferir.value = null; carregar() }
 }
+
+// abre sozinho o pedido indicado pelo aviso
+const rota = useRoute()
+async function abrirDoAviso() {
+  const id = rota.query.pedido as string | undefined
+  if (!id) return
+  const alvo = pedidos.value.find((p: any) => p.id === id)
+  if (alvo) await ver(alvo)
+}
+watch(() => rota.query.t, abrirDoAviso)
+
 </script>

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="cabecalho">
-      <div><h1>Vendas</h1><p>Histerico das baixas registradas pela unidade.</p></div>
+      <div><h1>Vendas</h1><p>Histórico das baixas registradas pela filial.</p></div>
       <NuxtLink to="/vendas/nova" class="btn btn-principal btn-p">Registrar venda</NuxtLink>
     </div>
 
@@ -18,10 +18,10 @@
 
       <div class="painel">
         <TabelaVazia v-if="!vendas.length" titulo="Nenhuma venda registrada"
-          texto="Registre a primeira venda para comecar a controlar o estoque." />
+          texto="Registre a primeira venda para começar a controlar o estoque." />
         <div v-else class="tabela-rolagem">
           <table class="lista">
-            <thead><tr><th>Codigo</th><th>Data</th><th>Registrada por</th><th>Total</th><th></th></tr></thead>
+            <thead><tr><th>Código</th><th>Data</th><th>Registrada por</th><th>Total</th><th></th></tr></thead>
             <tbody>
               <tr v-for="v in vendas" :key="v.id">
                 <td><strong>{{ v.code }}</strong></td>
@@ -40,7 +40,7 @@
       <p class="mini" style="margin-bottom:14px">{{ dataHora(aberta.created_at) }} · {{ aberta.created_by_name }}</p>
       <div v-if="aberta.note" class="aviso aviso-info">{{ aberta.note }}</div>
       <table class="lista" style="font-size:13px">
-        <thead><tr><th>Produto</th><th>Qtd</th><th>Unitario</th><th>Subtotal</th></tr></thead>
+        <thead><tr><th>Produto</th><th>Qtd</th><th>Unitário</th><th>Subtotal</th></tr></thead>
         <tbody>
           <tr v-for="i in itens" :key="i.id">
             <td><strong>{{ i.product_title }}</strong></td>
@@ -54,7 +54,7 @@
         <a v-if="urlComprovante" :href="urlComprovante" target="_blank" rel="noopener">
           <img :src="urlComprovante" class="envio-previa" alt="Comprovante da venda" />
         </a>
-        <p v-else class="mini">Comprovante indisponivel.</p>
+        <p v-else class="mini">Comprovante indisponível.</p>
       </div>
       <template #acoes><button class="btn btn-neutro btn-p" @click="aberta = null">Fechar</button></template>
     </JanelaModal>

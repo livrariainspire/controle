@@ -8,7 +8,7 @@
       <template v-if="etapa === 'email'">
         <h1 style="font-size:24px">Recuperar senha</h1>
         <p style="color:var(--texto);font-size:14px;margin:8px 0 22px;line-height:1.5">
-          Informe seu e-mail. Enviaremos um codigo de 6 digitos para voce criar uma nova senha.
+          Informe seu e-mail. Enviaremos um código de 6 digitos para você criar uma nova senha.
         </p>
 
         <div v-if="erro" class="aviso aviso-erro">{{ erro }}</div>
@@ -24,7 +24,7 @@
         </form>
 
         <div class="centro" style="margin-top:18px">
-          <NuxtLink to="/" class="btn-linha">Voltar para o inicio</NuxtLink>
+          <NuxtLink to="/" class="btn-linha">Voltar para o início</NuxtLink>
         </div>
       </template>
 
@@ -32,16 +32,16 @@
       <template v-else-if="etapa === 'codigo'">
         <h1 style="font-size:24px">Criar nova senha</h1>
         <p style="color:var(--texto);font-size:14px;margin:8px 0 22px;line-height:1.5">
-          Se existe uma conta com <strong>{{ email }}</strong>, o codigo chegou por e-mail.
-          Digite o codigo e escolha a nova senha.
+          Se existe uma conta com <strong>{{ email }}</strong>, o código chegou por e-mail.
+          Digite o código e escolha a nova senha.
         </p>
 
         <div v-if="erro" class="aviso aviso-erro">{{ erro }}</div>
-        <div v-if="reenviado" class="aviso aviso-ok">Codigo reenviado. Confira sua caixa de entrada.</div>
+        <div v-if="reenviado" class="aviso aviso-ok">Código reenviado. Confira sua caixa de entrada.</div>
 
         <form @submit.prevent="redefinir">
           <div class="grupo">
-            <label class="rotulo" for="codigo">Codigo recebido</label>
+            <label class="rotulo" for="codigo">Código recebido</label>
             <input id="codigo" ref="campoCodigo" :value="codigo" class="campo codigo"
                    inputmode="numeric" autocomplete="one-time-code" maxlength="6"
                    placeholder="000000" @input="digitarCodigo" />
@@ -49,7 +49,7 @@
           <div class="grade-2">
             <div class="grupo">
               <label class="rotulo">Nova senha</label>
-              <input v-model="senha" class="campo" type="password" minlength="8" required placeholder="Minimo 8 caracteres" />
+              <input v-model="senha" class="campo" type="password" minlength="8" required placeholder="Mínimo 8 caracteres" />
             </div>
             <div class="grupo">
               <label class="rotulo">Repetir senha</label>
@@ -68,7 +68,7 @@
           <button class="btn-linha" @click="etapa = 'email'">Corrigir o e-mail</button>
         </div>
 
-        <p class="pe-auth">Nao encontrou? Procure na caixa de spam antes de pedir outro codigo.</p>
+        <p class="pe-auth">Não encontrou? Procure na caixa de spam antes de pedir outro código.</p>
       </template>
 
       <!-- ETAPA 3: pronto -->
@@ -77,7 +77,7 @@
           <div style="font-size:40px;line-height:1">&#9989;</div>
           <h1 style="font-size:23px;margin-top:14px">Senha alterada</h1>
           <p style="color:var(--texto);font-size:14px;margin:12px 0 22px;line-height:1.6">
-            Sua nova senha ja esta valendo. Entre com ela para continuar.
+            Sua nova senha já está valendo. Entre com ela para continuar.
           </p>
           <NuxtLink to="/" class="btn btn-principal">Ir para a tela de entrada</NuxtLink>
         </div>

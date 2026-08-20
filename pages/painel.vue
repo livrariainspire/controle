@@ -9,7 +9,7 @@
       <NuxtLink v-if="perfil?.role === 'atendente'" to="/fila" class="btn btn-principal btn-p">Ver a fila</NuxtLink>
     </div>
 
-    <div v-if="carregando" class="carregando">Carregando informacoes...</div>
+    <div v-if="carregando" class="carregando">Carregando informações...</div>
 
     <template v-else>
       <div class="resumos">
@@ -26,11 +26,11 @@
           <NuxtLink :to="ehStaff ? (perfil?.role === 'admin' ? '/admin/pedidos' : '/fila') : '/pedidos'" class="btn-linha">Ver todos</NuxtLink>
         </div>
         <TabelaVazia v-if="!pedidos.length" titulo="Nenhum pedido ainda"
-          :texto="ehUnidade ? 'Assim que voce fizer um pedido, ele aparece aqui.' : 'Os pedidos das unidades aparecem aqui.'" />
+          :texto="ehUnidade ? 'Assim que você fizer um pedido, ele aparece aqui.' : 'Os pedidos das filiais aparecem aqui.'" />
         <div v-else class="tabela-rolagem">
           <table class="lista">
             <thead>
-              <tr><th>Codigo</th><th>Unidade</th><th>Situacao</th><th>Atendente</th><th>Criado em</th></tr>
+              <tr><th>Código</th><th>Filial</th><th>Situação</th><th>Atendente</th><th>Criado em</th></tr>
             </thead>
             <tbody>
               <tr v-for="p in pedidos" :key="p.id">
@@ -59,10 +59,10 @@ const ehStaff = computed(() => ['admin', 'atendente'].includes(perfil.value?.rol
 const primeiroNome = computed(() => (perfil.value?.full_name || '').split(' ')[0] || 'tudo bem')
 
 const frase = computed(() => ({
-  admin: 'Visao geral da operacao da livraria.',
+  admin: 'Visao geral da operação da livraria.',
   atendente: 'Acompanhe a fila e seus atendimentos.',
-  igreja: 'Peca livros e itens, controle o estoque e registre as vendas.',
-  ponto: 'Peca livros e itens, controle o estoque e registre as vendas.'
+  igreja: 'Peça livros e itens, controle o estoque e registre as vendas.',
+  ponto: 'Peça livros e itens, controle o estoque e registre as vendas.'
 }[perfil.value?.role ?? ''] ?? ''))
 
 const carregando = ref(true)
@@ -86,8 +86,8 @@ onMounted(async () => {
       { rotulo: 'Na fila', valor: fila.count ?? 0, nota: 'Aguardando atendente' },
       { rotulo: 'Em atendimento', valor: atend.count ?? 0, nota: 'Sendo separados agora' },
       { rotulo: 'Em espera', valor: esp.count ?? 0, nota: 'Aguardando chegada de produto' },
-      { rotulo: 'Aguardando recebimento', valor: receb.count ?? 0, nota: 'Unidade precisa confirmar' },
-      { rotulo: 'Cadastros a aprovar', valor: usu.count ?? 0, nota: 'Aguardando sua analise' }
+      { rotulo: 'Aguardando recebimento', valor: receb.count ?? 0, nota: 'Filial precisa confirmar' },
+      { rotulo: 'Cadastros a aprovar', valor: usu.count ?? 0, nota: 'Aguardando sua análise' }
     ]
   } else if (perfil.value?.role === 'atendente') {
     const [fila, meus, esp, feitos] = await Promise.all([
@@ -97,10 +97,10 @@ onMounted(async () => {
       supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'finalizado').eq('attendant_id', perfil.value.id)
     ])
     cartoes.value = [
-      { rotulo: 'Na fila', valor: fila.count ?? 0, nota: 'Disponiveis para puxar' },
+      { rotulo: 'Na fila', valor: fila.count ?? 0, nota: 'Disponíveis para puxar' },
       { rotulo: 'Comigo agora', valor: meus.count ?? 0, nota: 'Em atendimento' },
       { rotulo: 'Em espera', valor: esp.count ?? 0, nota: 'Aguardando produto chegar' },
-      { rotulo: 'Finalizados', valor: feitos.count ?? 0, nota: 'Recebidos pelas unidades' }
+      { rotulo: 'Finalizados', valor: feitos.count ?? 0, nota: 'Recebidos pelas filiais' }
     ]
   } else {
     const uid = perfil.value?.unit_id
@@ -112,7 +112,7 @@ onMounted(async () => {
     const totalEstoque = (est.data ?? []).reduce((s: number, r: any) => s + r.qty, 0)
     const totalVendas = (vendas.data ?? []).reduce((s: number, r: any) => s + Number(r.total), 0)
     cartoes.value = [
-      { rotulo: 'Pedidos abertos', valor: abertos.count ?? 0, nota: 'Ainda nao finalizados' },
+      { rotulo: 'Pedidos abertos', valor: abertos.count ?? 0, nota: 'Ainda não finalizados' },
       { rotulo: 'Itens em estoque', valor: totalEstoque, nota: 'Somando todos os produtos' },
       { rotulo: 'Total vendido', valor: moeda(totalVendas), nota: `${(vendas.data ?? []).length} vendas registradas` }
     ]

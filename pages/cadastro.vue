@@ -8,7 +8,7 @@
       <template v-if="etapa === 'dados'">
         <h1 style="font-size:26px">Criar minha conta</h1>
         <p style="color:var(--texto);font-size:14px;margin:8px 0 22px;line-height:1.5">
-          Preencha seus dados. Enviaremos um codigo para o seu e-mail confirmar que ele e seu.
+          Preencha seus dados. Enviaremos um código para o seu e-mail confirmar que ele é seu.
         </p>
 
         <div v-if="erro" class="aviso aviso-erro">{{ erro }}</div>
@@ -30,7 +30,7 @@
           <div class="grade-2">
             <div class="grupo">
               <label class="rotulo">Senha</label>
-              <input v-model="senha" class="campo" type="password" required minlength="8" placeholder="Minimo 8 caracteres" />
+              <input v-model="senha" class="campo" type="password" required minlength="8" placeholder="Mínimo 8 caracteres" />
             </div>
             <div class="grupo">
               <label class="rotulo">Repetir senha</label>
@@ -43,7 +43,7 @@
         </form>
 
         <div class="centro" style="margin-top:18px">
-          <NuxtLink to="/" class="btn-linha">Ja tenho conta</NuxtLink>
+          <NuxtLink to="/" class="btn-linha">Já tenho conta</NuxtLink>
         </div>
       </template>
 
@@ -51,16 +51,16 @@
       <template v-else-if="etapa === 'codigo'">
         <h1 style="font-size:24px">Confirmar o e-mail</h1>
         <p style="color:var(--texto);font-size:14px;margin:8px 0 22px;line-height:1.5">
-          Enviamos um codigo de 6 digitos para <strong>{{ email }}</strong>.
+          Enviamos um código de 6 digitos para <strong>{{ email }}</strong>.
           Digite abaixo para concluir o cadastro.
         </p>
 
         <div v-if="erro" class="aviso aviso-erro">{{ erro }}</div>
-        <div v-if="reenviado" class="aviso aviso-ok">Codigo reenviado. Confira sua caixa de entrada.</div>
+        <div v-if="reenviado" class="aviso aviso-ok">Código reenviado. Confira sua caixa de entrada.</div>
 
         <form @submit.prevent="validar">
           <div class="grupo">
-            <label class="rotulo" for="codigo">Codigo recebido</label>
+            <label class="rotulo" for="codigo">Código recebido</label>
             <input id="codigo" ref="campoCodigo" :value="codigo" class="campo codigo"
                    inputmode="numeric" autocomplete="one-time-code" maxlength="6"
                    placeholder="000000" @input="digitarCodigo" />
@@ -78,7 +78,7 @@
         </div>
 
         <p class="pe-auth">
-          Nao encontrou? Procure na caixa de spam antes de pedir outro codigo.
+          Não encontrou? Procure na caixa de spam antes de pedir outro código.
         </p>
       </template>
 
@@ -88,10 +88,10 @@
           <div style="font-size:40px;line-height:1">&#9989;</div>
           <h1 style="font-size:23px;margin-top:14px">E-mail confirmado</h1>
           <p style="color:var(--texto);font-size:14px;margin:12px 0 22px;line-height:1.6">
-            Seu cadastro foi enviado. A administracao vai revisar seus dados, liberar o acesso
-            e vincular voce a sua unidade. Voce recebera o aviso pelo WhatsApp informado.
+            Seu cadastro foi enviado. A administração vai revisar seus dados, liberar o acesso
+            e vincular você a sua filial. Você receberá o aviso pelo WhatsApp informado.
           </p>
-          <NuxtLink to="/" class="btn btn-principal">Voltar para o inicio</NuxtLink>
+          <NuxtLink to="/" class="btn btn-principal">Voltar para o início</NuxtLink>
         </div>
       </template>
     </div>

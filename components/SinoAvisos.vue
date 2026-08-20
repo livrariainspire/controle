@@ -22,7 +22,7 @@
     <div v-if="popup && avisos.length" class="fundo-janela" @click.self="fecharPopup">
       <div class="janela" style="max-width:460px">
         <div class="janela-topo">
-          <h3>Voce tem {{ avisos.length }} aviso(s)</h3>
+          <h3>Você tem {{ avisos.length }} aviso(s)</h3>
           <button class="fechar" aria-label="Fechar" @click="fecharPopup">&times;</button>
         </div>
         <div class="janela-corpo">
@@ -87,13 +87,16 @@ async function abrir(a: any) {
   await supa.rpc('fn_read_notifications', { p_ids: [a.id] })
   avisos.value = avisos.value.filter(x => x.id !== a.id)
   popup.value = false; painel.value = false
+
   const papel = useSessao().value.perfil?.role
   if (a.kind === 'cadastro') return navigateTo('/admin/usuarios')
-  if (a.order_id) {
-    if (papel === 'admin') return navigateTo('/admin/pedidos')
-    if (papel === 'atendente') return navigateTo('/atendimentos')
-    return navigateTo('/pedidos')
-  }
+  if (!a.order_id) return
+
+  // leva direto ao pedido, ja com a janela aberta
+  const destino = papel === 'admin' ? '/admin/pedidos'
+    : papel === 'atendente' ? '/atendimentos'
+    : '/pedidos'
+  return navigateTo({ path: destino, query: { pedido: a.order_id, t: Date.now() } })
 }
 
 function fecharPopup() { popup.value = false }

@@ -6,7 +6,7 @@
 
       <h1 style="font-size:26px">Entrar</h1>
       <p style="color:var(--texto);font-size:14px;margin:8px 0 22px;line-height:1.5">
-        Use o e-mail e a senha cadastrados pela administracao.
+        Use o e-mail e a senha cadastrados pela administração.
       </p>
 
       <div v-if="erro" class="aviso aviso-erro">{{ erro }}</div>
@@ -33,7 +33,7 @@
       </div>
 
       <p class="pe-auth">
-        Problemas para entrar? Fale com a administracao da Livraria Inspire.
+        Problemas para entrar? Fale com a administração da Livraria Inspire.
       </p>
     </div>
   </div>
@@ -56,7 +56,7 @@ async function entrar() {
   if (error) {
     erro.value = error.message.includes('Invalid')
       ? 'E-mail ou senha incorretos.'
-      : 'Nao foi possivel entrar: ' + error.message
+      : 'Não foi possível entrar: ' + error.message
     ocupado.value = false
     return
   }

@@ -827,7 +827,7 @@ language sql stable security definer set search_path = public as $$
       and (p_from is null or s.created_at >= p_from)
       and (p_to   is null or s.created_at < (p_to + 1))
     left join public.sale_items si on si.sale_id = s.id
-   where public.is_admin()
+   where public.is_staff()
    group by u.id, u.name, u.type
    order by 6 desc, 2;
 $$;
@@ -842,7 +842,7 @@ language sql stable security definer set search_path = public as $$
     from public.stock st
     join public.units u    on u.id = st.unit_id
     join public.products p on p.id = st.product_id
-   where public.is_admin() and st.qty > 0
+   where public.is_staff() and st.qty > 0
    order by u.name, p.title;
 $$;
 

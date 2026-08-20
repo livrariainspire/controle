@@ -25,7 +25,7 @@
           <label class="rotulo">Perfil</label>
           <input :value="rotuloPerfil(perfil?.role) + (unidade ? ' · ' + unidade.name : '')" class="campo" disabled />
         </div>
-        <button class="btn btn-principal" style="width:auto" :disabled="ocupado" @click="salvar">Salvar alteracoes</button>
+        <button class="btn btn-principal" style="width:auto" :disabled="ocupado" @click="salvar">Salvar alterações</button>
       </div>
     </div>
 
@@ -35,7 +35,7 @@
         <div class="grade-2">
           <div class="grupo">
             <label class="rotulo">Nova senha</label>
-            <input v-model="senha" class="campo" type="password" minlength="8" placeholder="Minimo 8 caracteres" />
+            <input v-model="senha" class="campo" type="password" minlength="8" placeholder="Mínimo 8 caracteres" />
           </div>
           <div class="grupo">
             <label class="rotulo">Repetir senha</label>
@@ -68,7 +68,7 @@ async function salvar() {
     .eq('id', perfil.value!.id)
   ocupado.value = false
   erro.value = !!error
-  msg.value = error ? 'Nao foi possivel salvar: ' + error.message : 'Dados atualizados.'
+  msg.value = error ? 'Não foi possível salvar: ' + error.message : 'Dados atualizados.'
   if (!error) await carregarSessao()
 }
 
@@ -80,7 +80,7 @@ async function trocarSenha() {
   const { error } = await supa.auth.updateUser({ password: senha.value })
   ocupado.value = false
   erro.value = !!error
-  msg.value = error ? 'Nao foi possivel trocar: ' + error.message : 'Senha alterada.'
+  msg.value = error ? 'Não foi possível trocar: ' + error.message : 'Senha alterada.'
   senha.value = ''; senha2.value = ''
 }
 </script>

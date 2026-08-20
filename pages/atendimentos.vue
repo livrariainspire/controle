@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="cabecalho">
-      <div><h1>Meus atendimentos</h1><p>Converse com a unidade, retire o que estiver em falta e registre o envio.</p></div>
+      <div><h1>Meus atendimentos</h1><p>Converse com a filial, retire o que estiver em falta e registre o envio.</p></div>
       <NuxtLink to="/fila" class="btn btn-neutro btn-p">Ir para a fila</NuxtLink>
     </div>
 
@@ -11,10 +11,10 @@
     <template v-else>
       <div class="painel">
         <div class="painel-topo"><h2>Em atendimento ({{ abertos.length }})</h2></div>
-        <TabelaVazia v-if="!abertos.length" titulo="Nada em atendimento" texto="Puxe um pedido da fila para comecar." />
+        <TabelaVazia v-if="!abertos.length" titulo="Nada em atendimento" texto="Puxe um pedido da fila para começar." />
         <div v-else class="tabela-rolagem">
           <table class="lista">
-            <thead><tr><th>Codigo</th><th>Unidade</th><th>Itens</th><th>Retirada prevista</th><th>Puxado em</th><th></th></tr></thead>
+            <thead><tr><th>Código</th><th>Filial</th><th>Itens</th><th>Retirada prevista</th><th>Puxado em</th><th></th></tr></thead>
             <tbody>
               <tr v-for="p in abertos" :key="p.id">
                 <td><strong>{{ p.code }}</strong></td>
@@ -38,7 +38,7 @@
           texto="Pedidos aguardando a chegada de produto aparecem aqui." />
         <div v-else class="tabela-rolagem">
           <table class="lista">
-            <thead><tr><th>Codigo</th><th>Unidade</th><th>Veio de</th><th>Itens</th><th>Retirada prevista</th><th>Desde</th><th></th></tr></thead>
+            <thead><tr><th>Código</th><th>Filial</th><th>Veio de</th><th>Itens</th><th>Retirada prevista</th><th>Desde</th><th></th></tr></thead>
             <tbody>
               <tr v-for="p in espera" :key="p.id">
                 <td><strong>{{ p.code }}</strong></td>
@@ -62,7 +62,7 @@
         <TabelaVazia v-if="!concluidos.length" titulo="Nenhum pedido concluido" texto="Seus envios aparecem aqui." />
         <div v-else class="tabela-rolagem">
           <table class="lista">
-            <thead><tr><th>Codigo</th><th>Unidade</th><th>Situacao</th><th>Enviado em</th><th></th></tr></thead>
+            <thead><tr><th>Código</th><th>Filial</th><th>Situação</th><th>Enviado em</th><th></th></tr></thead>
             <tbody>
               <tr v-for="p in concluidos" :key="p.id">
                 <td><strong>{{ p.code }}</strong></td>
@@ -120,12 +120,12 @@
             <span style="font-size:14px">Criar pedido em espera com o que faltar</span>
           </label>
           <p class="mini" style="margin-top:6px">
-            O que foi retirado ou enviado a menos vira um pedido novo em espera, que fica com voce ate o produto chegar.
+            O que foi retirado ou enviado a menos vira um pedido novo em espera, que fica com você até o produto chegar.
           </p>
         </div>
         <div v-if="criarEspera" class="grupo">
-          <label class="rotulo">Observacao do pedido em espera</label>
-          <input v-model="notaEspera" class="campo" placeholder="Ex.: previsao de chegada na proxima semana" />
+          <label class="rotulo">Observação do pedido em espera</label>
+          <input v-model="notaEspera" class="campo" placeholder="Ex.: previsão de chegada na próxima semana" />
         </div>
         <button class="btn btn-principal" :disabled="ocupado" @click="concluir">
           {{ ocupado ? 'Registrando...' : 'Registrar envio' }}
@@ -169,6 +169,7 @@ async function carregar() {
   espera.value = e.data ?? []
   concluidos.value = c.data ?? []
   carregando.value = false
+  await abrirDoAviso()
 }
 onMounted(carregar)
 
@@ -213,7 +214,7 @@ async function concluir() {
   ocupado.value = false
   if (error) { erroJanela.value = error.message; return }
   erro.value = false
-  msg.value = `Envio de ${atual.value.code} registrado. A unidade precisa confirmar o recebimento.`
+  msg.value = `Envio de ${atual.value.code} registrado. A filial precisa confirmar o recebimento.`
   atual.value = null
   carregar()
 }
@@ -232,4 +233,15 @@ async function retomar(p: any) {
   erro.value = false; msg.value = `${p.code} voltou para o atendimento.`
   carregar()
 }
+
+// abre sozinho o pedido indicado pelo aviso
+const rota = useRoute()
+async function abrirDoAviso() {
+  const id = rota.query.pedido as string | undefined
+  if (!id) return
+  const alvo = [...abertos.value, ...espera.value, ...concluidos.value].find((p: any) => p.id === id)
+  if (alvo) abrir(alvo)
+}
+watch(() => rota.query.t, abrirDoAviso)
+
 </script>

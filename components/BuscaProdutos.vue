@@ -18,10 +18,10 @@
           {{ resultados.length }} resultado(s) para "{{ termo.trim() }}"
         </template>
         <template v-else-if="somenteComEstoque">
-          {{ resultados.length }} produto(s) disponiveis no seu estoque
+          {{ resultados.length }} produto(s) disponíveis no seu estoque
         </template>
         <template v-else>
-          {{ resultados.length }} produto(s) liberados para sua unidade
+          {{ resultados.length }} produto(s) liberados para sua filial
         </template>
       </span>
       <button v-if="termo" class="btn-linha" @click="limpar">Limpar busca</button>
@@ -68,12 +68,12 @@ let temporizador: any = null
 
 const placeholder = computed(() => props.somenteComEstoque
   ? 'Buscar no seu estoque'
-  : 'Buscar por titulo, autor, edicao ou resumo')
+  : 'Buscar por titulo, autor, edição ou resumo')
 
 const vazioTexto = computed(() => {
   if (termo.value.trim().length >= 2) return 'Tente outra palavra do titulo, do autor ou do resumo.'
-  if (props.somenteComEstoque) return 'Voce ainda nao recebeu nenhum produto da livraria.'
-  return 'A administracao ainda nao liberou produtos para o seu perfil.'
+  if (props.somenteComEstoque) return 'Você ainda não recebeu nenhum produto da livraria.'
+  return 'A administração ainda não liberou produtos para o seu perfil.'
 })
 
 const detalhe = (p: any) => {

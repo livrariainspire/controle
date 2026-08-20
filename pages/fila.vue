@@ -13,7 +13,7 @@
         texto="Nenhum pedido aguardando no momento." />
       <div v-else class="tabela-rolagem">
         <table class="lista">
-          <thead><tr><th>Codigo</th><th>Unidade</th><th>Solicitante</th><th>Itens</th><th>Retirada prevista</th><th>Na fila desde</th><th></th></tr></thead>
+          <thead><tr><th>Código</th><th>Filial</th><th>Solicitante</th><th>Itens</th><th>Retirada prevista</th><th>Na fila desde</th><th></th></tr></thead>
           <tbody>
             <tr v-for="p in pedidos" :key="p.id">
               <td><strong>{{ p.code }}</strong></td>
@@ -73,6 +73,7 @@ async function carregar() {
     .select('*, order_items(*)').eq('status', 'fila').order('created_at')
   pedidos.value = data ?? []
   carregando.value = false
+  await abrirDoAviso()
 }
 onMounted(carregar)
 
@@ -84,4 +85,15 @@ async function puxar(p: any) {
   if (error) { aviso.value = error.message; aberto.value = null; carregar(); return }
   await navigateTo('/atendimentos')
 }
+
+// abre sozinho o pedido indicado pelo aviso
+const rota = useRoute()
+async function abrirDoAviso() {
+  const id = rota.query.pedido as string | undefined
+  if (!id) return
+  const alvo = pedidos.value.find((p: any) => p.id === id)
+  if (alvo) await ver(alvo)
+}
+watch(() => rota.query.t, abrirDoAviso)
+
 </script>
