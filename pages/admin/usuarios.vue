@@ -49,7 +49,8 @@
                 <td class="acoes-celula">
                   <button class="btn btn-neutro btn-p" @click="abrirAprovacao(u)">Perfil</button>
                   <button class="btn btn-neutro btn-p" @click="abrirSenha(u)">Senha</button>
-                  <button v-if="u.status === 'aprovado'" class="btn btn-perigo btn-p" @click="desativar(u)">Desativar</button>
+                  <button v-if="u.status === 'aprovado'" class="btn btn-neutro btn-p" @click="desativar(u)">Desativar</button>
+                  <button class="btn btn-perigo btn-p" @click="abrirExclusao(u)">Excluir</button>
                 </td>
               </tr>
             </tbody>
@@ -96,6 +97,32 @@
       <template #acoes>
         <button class="btn btn-neutro btn-p" @click="alvoSenha = null">Cancelar</button>
         <button class="btn btn-principal btn-p" style="width:auto" :disabled="ocupado" @click="salvarSenha">Definir senha</button>
+      </template>
+    </JanelaModal>
+
+    <!-- excluir usuario -->
+    <JanelaModal v-if="alvoExcluir" :titulo="`Excluir ${alvoExcluir.full_name || alvoExcluir.email}`" @fechar="alvoExcluir = null">
+      <p style="font-size:14px;line-height:1.6;color:var(--texto)">
+        A conta e o acesso serao apagados definitivamente. Pedidos, vendas e registros
+        feitos por esta pessoa continuam no historico com o nome dela.
+      </p>
+      <div v-if="resumoExclusao" class="painel" style="margin-top:16px">
+        <div class="painel-corpo pilha">
+          <div class="entre"><span class="mini">Pedidos criados</span><strong>{{ resumoExclusao.pedidos }}</strong></div>
+          <div class="entre"><span class="mini">Vendas registradas</span><strong>{{ resumoExclusao.vendas }}</strong></div>
+          <div class="entre"><span class="mini">Pedidos atendidos</span><strong>{{ resumoExclusao.atendimentos }}</strong></div>
+        </div>
+      </div>
+      <div class="grupo" style="margin-top:18px">
+        <label class="rotulo">Para confirmar, digite EXCLUIR</label>
+        <input v-model="confirmaExclusao" class="campo" placeholder="EXCLUIR" />
+      </div>
+      <template #acoes>
+        <button class="btn btn-neutro btn-p" @click="alvoExcluir = null">Cancelar</button>
+        <button class="btn btn-perigo btn-p" style="width:auto"
+                :disabled="ocupado || confirmaExclusao.trim().toUpperCase() !== 'EXCLUIR'" @click="excluirUsuario">
+          {{ ocupado ? 'Excluindo...' : 'Excluir definitivamente' }}
+        </button>
       </template>
     </JanelaModal>
 
@@ -147,6 +174,9 @@ const msg = ref(''); const erro = ref(false); const ocupado = ref(false)
 const alvo = ref<any>(null); const papel = ref(''); const unidade = ref('')
 const alvoSenha = ref<any>(null); const senhaNova = ref('')
 const novo = ref<any>(null)
+const alvoExcluir = ref<any>(null)
+const resumoExclusao = ref<any>(null)
+const confirmaExclusao = ref('')
 
 const pendentes = computed(() => usuarios.value.filter(u => u.status === 'pendente'))
 const filtrados = computed(() => {
@@ -196,6 +226,22 @@ async function desativar(u: any) {
   if (!confirm(`Desativar o acesso de ${u.full_name || u.email}?`)) return
   await supa.rpc('fn_set_user_status', { p_user: u.id, p_status: 'inativo', p_note: null })
   carregar()
+}
+
+async function abrirExclusao(u: any) {
+  alvoExcluir.value = u; confirmaExclusao.value = ''; resumoExclusao.value = null
+  const { data } = await supa.rpc('fn_check_user_delete', { p_id: u.id })
+  resumoExclusao.value = Array.isArray(data) ? data[0] : data
+}
+
+async function excluirUsuario() {
+  msg.value = ''; ocupado.value = true
+  try {
+    await chamarApi('/delete-user', { user_id: alvoExcluir.value.id })
+    erro.value = false; msg.value = 'Usuario excluido.'
+    alvoExcluir.value = null; carregar()
+  } catch (e: any) { erro.value = true; msg.value = e.message }
+  ocupado.value = false
 }
 
 async function salvarSenha() {

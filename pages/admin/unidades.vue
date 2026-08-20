@@ -81,6 +81,9 @@
         <span style="font-size:14px">Unidade ativa</span>
       </label>
       <template #acoes>
+        <button v-if="form.id" class="btn btn-perigo btn-p" style="margin-right:auto" :disabled="ocupado" @click="excluir">
+          Excluir unidade
+        </button>
         <button class="btn btn-neutro btn-p" @click="form = null">Cancelar</button>
         <button class="btn btn-principal btn-p" style="width:auto" :disabled="ocupado" @click="salvar">Salvar</button>
       </template>
@@ -110,6 +113,16 @@ onMounted(carregar)
 
 function abrirNova() { form.value = { name: '', type: 'igreja', responsible: '', phone: '', city: '', state: '', address: '', active: true } }
 function editar(u: any) { form.value = { ...u } }
+
+async function excluir() {
+  if (!confirm(`Excluir a unidade "${form.value.name}"? Nao da para desfazer.`)) return
+  ocupado.value = true; msg.value = ''
+  const { error } = await supa.rpc('fn_delete_unit', { p_id: form.value.id })
+  ocupado.value = false
+  if (error) { erro.value = true; msg.value = error.message; form.value = null; return }
+  erro.value = false; msg.value = 'Unidade excluida.'
+  form.value = null; carregar()
+}
 
 async function salvar() {
   msg.value = ''

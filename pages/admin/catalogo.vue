@@ -83,6 +83,9 @@
         <span style="font-size:14px">Produto disponivel para pedidos</span>
       </label>
       <template #acoes>
+        <button v-if="form.id" class="btn btn-perigo btn-p" style="margin-right:auto" :disabled="ocupado" @click="excluir">
+          Excluir produto
+        </button>
         <button class="btn btn-neutro btn-p" @click="form = null">Cancelar</button>
         <button class="btn btn-principal btn-p" style="width:auto" :disabled="ocupado" @click="salvar">
           {{ ocupado ? 'Salvando...' : 'Salvar' }}
@@ -124,6 +127,16 @@ function abrirNovo() {
   form.value = { type: 'livro', title: '', author: '', edition: '', summary: '', visibility: 'ambos', active: true, photo_url: null }
 }
 function editar(p: any) { novaFoto.value = null; form.value = { ...p } }
+
+async function excluir() {
+  if (!confirm(`Excluir "${form.value.title}" do catalogo? Nao da para desfazer.`)) return
+  ocupado.value = true; msg.value = ''
+  const { error } = await supa.rpc('fn_delete_product', { p_id: form.value.id })
+  ocupado.value = false
+  if (error) { erro.value = true; msg.value = error.message; form.value = null; return }
+  erro.value = false; msg.value = 'Produto excluido.'
+  form.value = null; carregar()
+}
 
 async function salvar() {
   msg.value = ''

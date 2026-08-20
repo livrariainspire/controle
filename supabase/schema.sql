@@ -834,6 +834,87 @@ $$;
 
 
 -- ---------------------------------------------------------------------
+-- 7. Exclusao de cadastros
+--    Só apaga o que nunca foi usado. O que ja tem historico deve ser
+--    desativado, para nao deixar pedidos e vendas sem referencia.
+-- ---------------------------------------------------------------------
+
+-- 7.1 Excluir produto do catalogo
+create or replace function public.fn_delete_product(p_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare v_title text; v_pedidos int; v_vendas int; v_estoque int;
+begin
+  if not public.is_admin() then raise exception 'Apenas o administrador pode excluir produtos.'; end if;
+
+  select title into v_title from public.products where id = p_id;
+  if v_title is null then raise exception 'Produto nao encontrado.'; end if;
+
+  select count(*) into v_pedidos from public.order_items where product_id = p_id;
+  select count(*) into v_vendas  from public.sale_items  where product_id = p_id;
+  select count(*) into v_estoque from public.stock       where product_id = p_id and qty > 0;
+
+  if v_pedidos > 0 or v_vendas > 0 or v_estoque > 0 then
+    raise exception 'Nao da para excluir "%": ja aparece em % pedido(s), % venda(s) e % unidade(s) com estoque. Desative o produto para tira-lo da lista sem perder o historico.',
+      v_title, v_pedidos, v_vendas, v_estoque;
+  end if;
+
+  delete from public.stock where product_id = p_id;
+  delete from public.products where id = p_id;
+
+  perform public.log_action('produto_excluido','products',p_id, jsonb_build_object('titulo',v_title));
+end $$;
+
+-- 7.2 Excluir unidade
+create or replace function public.fn_delete_unit(p_id uuid) returns void
+language plpgsql security definer set search_path = public as $$
+declare v_name text; v_pessoas int; v_pedidos int; v_vendas int; v_estoque int;
+begin
+  if not public.is_admin() then raise exception 'Apenas o administrador pode excluir unidades.'; end if;
+
+  select name into v_name from public.units where id = p_id;
+  if v_name is null then raise exception 'Unidade nao encontrada.'; end if;
+
+  select count(*) into v_pessoas from public.profiles where unit_id = p_id;
+  select count(*) into v_pedidos from public.orders   where unit_id = p_id;
+  select count(*) into v_vendas  from public.sales    where unit_id = p_id;
+  select count(*) into v_estoque from public.stock    where unit_id = p_id and qty > 0;
+
+  if v_pedidos > 0 or v_vendas > 0 or v_estoque > 0 then
+    raise exception 'Nao da para excluir "%": tem % pedido(s), % venda(s) e % produto(s) em estoque. Desative a unidade para tira-la de uso sem perder o historico.',
+      v_name, v_pedidos, v_vendas, v_estoque;
+  end if;
+
+  if v_pessoas > 0 then
+    raise exception 'Nao da para excluir "%": ainda ha % usuario(s) vinculado(s). Troque a unidade dessas pessoas ou exclua os usuarios antes.',
+      v_name, v_pessoas;
+  end if;
+
+  delete from public.stock where unit_id = p_id;
+  delete from public.units where id = p_id;
+
+  perform public.log_action('unidade_excluida','units',p_id, jsonb_build_object('nome',v_name));
+end $$;
+
+-- 7.3 Verificacao antes de excluir um usuario
+create or replace function public.fn_check_user_delete(p_id uuid)
+returns table (nome text, pedidos bigint, vendas bigint, atendimentos bigint)
+language sql stable security definer set search_path = public as $$
+  select coalesce(nullif(p.full_name,''), p.email),
+         (select count(*) from public.orders where requested_by = p_id),
+         (select count(*) from public.sales  where created_by   = p_id),
+         (select count(*) from public.orders where attendant_id = p_id)
+    from public.profiles p
+   where p.id = p_id and public.is_admin();
+$$;
+
+grant execute on function
+  public.fn_delete_product(uuid),
+  public.fn_delete_unit(uuid),
+  public.fn_check_user_delete(uuid)
+to authenticated;
+
+
+-- ---------------------------------------------------------------------
 -- 6. SEGURANCA (RLS)
 -- ---------------------------------------------------------------------
 alter table public.units              enable row level security;
