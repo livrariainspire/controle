@@ -42,6 +42,9 @@
           </tr>
         </tbody>
       </table>
+      <hr class="divisor" />
+      <h4 style="font-size:14px;margin-bottom:12px">Conversa do pedido</h4>
+      <ChatPedido :pedido-id="aberto.id" />
       <template #acoes>
         <button class="btn btn-neutro btn-p" @click="aberto = null">Fechar</button>
         <button class="btn btn-principal btn-p" style="width:auto" @click="puxar(aberto)">Puxar pedido</button>

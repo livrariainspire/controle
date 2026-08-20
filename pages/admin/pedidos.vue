@@ -16,7 +16,9 @@
             <option value="">Todas as situacoes</option>
             <option value="fila">Na fila</option>
             <option value="em_atendimento">Em atendimento</option>
-            <option value="enviado">Enviado</option>
+            <option value="em_espera">Em espera</option>
+            <option value="enviado">Aguardando recebimento</option>
+            <option value="finalizado">Finalizado</option>
             <option value="cancelado">Cancelado</option>
           </select>
           <input v-model="busca" class="campo" style="max-width:220px" type="search" placeholder="Codigo ou unidade" />
@@ -28,7 +30,10 @@
           <thead><tr><th>Codigo</th><th>Unidade</th><th>Solicitante</th><th>Situacao</th><th>Atendente</th><th>Criado</th><th></th></tr></thead>
           <tbody>
             <tr v-for="p in filtrados" :key="p.id">
-              <td><strong>{{ p.code }}</strong></td>
+              <td>
+                <strong>{{ p.code }}</strong>
+                <div v-if="p.parent_code" class="mini">Veio de {{ p.parent_code }}</div>
+              </td>
               <td>{{ p.unit_name }}</td>
               <td>{{ p.requested_by_name }}</td>
               <td><span class="selo" :class="classeSelo(p.status)">{{ rotuloSituacao(p.status) }}</span></td>
@@ -36,7 +41,7 @@
               <td>{{ dataHora(p.created_at) }}</td>
               <td class="acoes-celula">
                 <button class="btn btn-neutro btn-p" @click="ver(p)">Detalhes</button>
-                <button v-if="['fila','em_atendimento'].includes(p.status)" class="btn btn-contorno btn-p" @click="abrirTransferencia(p)">Redirecionar</button>
+                <button v-if="['fila','em_atendimento','em_espera'].includes(p.status)" class="btn btn-contorno btn-p" @click="abrirTransferencia(p)">Redirecionar</button>
               </td>
             </tr>
           </tbody>
@@ -51,16 +56,25 @@
         <div class="entre"><span class="mini">Criado</span><strong>{{ dataHora(aberto.created_at) }}</strong></div>
         <div class="entre"><span class="mini">Puxado</span><strong>{{ dataHora(aberto.claimed_at) }}</strong></div>
         <div class="entre"><span class="mini">Enviado</span><strong>{{ dataHora(aberto.completed_at) }}</strong></div>
+        <div class="entre"><span class="mini">Recebido</span><strong>{{ aberto.received_by_name ? dataHora(aberto.received_at) + ' · ' + aberto.received_by_name : '—' }}</strong></div>
       </div>
       <div v-if="aberto.note" class="aviso aviso-info">{{ aberto.note }}</div>
       <table class="lista" style="font-size:13px">
         <thead><tr><th>Produto</th><th>Pedido</th><th>Enviado</th></tr></thead>
         <tbody>
-          <tr v-for="i in aberto.order_items" :key="i.id">
-            <td><strong>{{ i.product_title }}</strong></td><td>{{ i.qty_requested }}</td><td>{{ i.qty_sent }}</td>
+          <tr v-for="i in aberto.order_items" :key="i.id" :class="{ 'item-retirado': i.removed }">
+            <td>
+              <strong>{{ i.product_title }}</strong>
+              <div v-if="i.removed" class="mini">Retirado por {{ i.removed_by_name }}<template v-if="i.removed_reason"> · {{ i.removed_reason }}</template></div>
+            </td>
+            <td>{{ i.qty_requested }}</td>
+            <td>{{ i.removed ? 'Retirado' : i.qty_sent }}</td>
           </tr>
         </tbody>
       </table>
+      <hr class="divisor" />
+      <h4 style="font-size:14px;margin-bottom:12px">Conversa do pedido</h4>
+      <ChatPedido :pedido-id="aberto.id" :encerrado="['finalizado','cancelado'].includes(aberto.status)" />
       <template #acoes><button class="btn btn-neutro btn-p" @click="aberto = null">Fechar</button></template>
     </JanelaModal>
 

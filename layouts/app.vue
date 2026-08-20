@@ -8,6 +8,7 @@
             <strong>{{ perfil?.full_name || perfil?.email }}</strong>
             <span>{{ rotuloPerfil(perfil?.role) }}<template v-if="unidade"> · {{ unidade.name }}</template></span>
           </div>
+          <SinoAvisos />
           <button class="btn btn-neutro btn-p" @click="sair">Sair</button>
         </div>
       </div>

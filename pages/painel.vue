@@ -75,40 +75,44 @@ onMounted(async () => {
   pedidos.value = data ?? []
 
   if (perfil.value?.role === 'admin') {
-    const [fila, atend, unid, usu] = await Promise.all([
+    const [fila, atend, esp, receb, usu] = await Promise.all([
       supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'fila'),
       supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'em_atendimento'),
-      supa.from('units').select('id', { count: 'exact', head: true }).eq('active', true),
+      supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'em_espera'),
+      supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'enviado'),
       supa.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'pendente')
     ])
     cartoes.value = [
-      { rotulo: 'Na fila', valor: fila.count ?? 0, nota: 'Pedidos aguardando atendente' },
+      { rotulo: 'Na fila', valor: fila.count ?? 0, nota: 'Aguardando atendente' },
       { rotulo: 'Em atendimento', valor: atend.count ?? 0, nota: 'Sendo separados agora' },
-      { rotulo: 'Unidades ativas', valor: unid.count ?? 0, nota: 'Igrejas e pontos de partida' },
+      { rotulo: 'Em espera', valor: esp.count ?? 0, nota: 'Aguardando chegada de produto' },
+      { rotulo: 'Aguardando recebimento', valor: receb.count ?? 0, nota: 'Unidade precisa confirmar' },
       { rotulo: 'Cadastros a aprovar', valor: usu.count ?? 0, nota: 'Aguardando sua analise' }
     ]
   } else if (perfil.value?.role === 'atendente') {
-    const [fila, meus, feitos] = await Promise.all([
+    const [fila, meus, esp, feitos] = await Promise.all([
       supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'fila'),
       supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'em_atendimento').eq('attendant_id', perfil.value.id),
-      supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'enviado').eq('attendant_id', perfil.value.id)
+      supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'em_espera').eq('attendant_id', perfil.value.id),
+      supa.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'finalizado').eq('attendant_id', perfil.value.id)
     ])
     cartoes.value = [
       { rotulo: 'Na fila', valor: fila.count ?? 0, nota: 'Disponiveis para puxar' },
       { rotulo: 'Comigo agora', valor: meus.count ?? 0, nota: 'Em atendimento' },
-      { rotulo: 'Ja enviados', valor: feitos.count ?? 0, nota: 'Concluidos por voce' }
+      { rotulo: 'Em espera', valor: esp.count ?? 0, nota: 'Aguardando produto chegar' },
+      { rotulo: 'Finalizados', valor: feitos.count ?? 0, nota: 'Recebidos pelas unidades' }
     ]
   } else {
     const uid = perfil.value?.unit_id
     const [abertos, est, vendas] = await Promise.all([
-      supa.from('orders').select('id', { count: 'exact', head: true }).eq('unit_id', uid).in('status', ['fila', 'em_atendimento']),
+      supa.from('orders').select('id', { count: 'exact', head: true }).eq('unit_id', uid).in('status', ['fila', 'em_atendimento', 'em_espera', 'enviado']),
       supa.from('stock').select('qty').eq('unit_id', uid),
       supa.from('sales').select('total').eq('unit_id', uid)
     ])
     const totalEstoque = (est.data ?? []).reduce((s: number, r: any) => s + r.qty, 0)
     const totalVendas = (vendas.data ?? []).reduce((s: number, r: any) => s + Number(r.total), 0)
     cartoes.value = [
-      { rotulo: 'Pedidos abertos', valor: abertos.count ?? 0, nota: 'Na fila ou em atendimento' },
+      { rotulo: 'Pedidos abertos', valor: abertos.count ?? 0, nota: 'Ainda nao finalizados' },
       { rotulo: 'Itens em estoque', valor: totalEstoque, nota: 'Somando todos os produtos' },
       { rotulo: 'Total vendido', valor: moeda(totalVendas), nota: `${(vendas.data ?? []).length} vendas registradas` }
     ]

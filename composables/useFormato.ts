@@ -26,7 +26,9 @@ export const mascaraZap = (v: string) => {
 export const rotuloSituacao = (s: string) => ({
   fila: 'Na fila',
   em_atendimento: 'Em atendimento',
-  enviado: 'Enviado',
+  em_espera: 'Em espera',
+  enviado: 'Aguardando recebimento',
+  finalizado: 'Finalizado',
   cancelado: 'Cancelado',
   pendente: 'Aguardando aprovacao',
   aprovado: 'Ativo',
@@ -37,7 +39,9 @@ export const rotuloSituacao = (s: string) => ({
 export const classeSelo = (s: string) => ({
   fila: 'selo-fila',
   em_atendimento: 'selo-atendimento',
-  enviado: 'selo-enviado',
+  em_espera: 'selo-espera',
+  enviado: 'selo-laranja',
+  finalizado: 'selo-enviado',
   cancelado: 'selo-cancelado',
   pendente: 'selo-fila',
   aprovado: 'selo-enviado',

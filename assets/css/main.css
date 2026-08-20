@@ -254,3 +254,8 @@ table.lista td strong { color: var(--tinta); font-weight: 600; }
 .carregando { padding: 48px; text-align: center; color: var(--rotulo); font-size: 14px; }
 .pilha > * + * { margin-top: 14px; }
 .zap { color: var(--verde); font-weight: 600; }
+
+/* ---------- Situacoes adicionadas na versao 2 ---------- */
+.selo-espera { background: #efe9fb; color: #5b4a99; }
+.item-retirado { opacity: .55; }
+.item-retirado .produto-nome { text-decoration: line-through; }
