@@ -1,10 +1,10 @@
 /* =====================================================================
-   CONFIGURACAO DO SISTEMA — Livraria Inspire Presence
+   CONFIGURACAO DO SISTEMA — Livraria Inspire Order Book
 
-   Troque os dois valores abaixo pelos dados do seu projeto Supabase.
-   Eles ficam em: Supabase > Project Settings > API
+   Ja preenchido com os dados do projeto Supabase da Livraria Inspire.
+   So mexa aqui se o projeto do Supabase mudar.
 
-   Depois de salvar este arquivo, o site se atualiza sozinho.
+   Onde conferir: Supabase > Project Settings > API
    ===================================================================== */
 
 window.__INSPIRE__ = {
