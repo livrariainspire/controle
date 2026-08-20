@@ -248,7 +248,21 @@ create table if not exists public.notification_reads (
   primary key (notification_id, user_id)
 );
 
--- 2.10 Sequencias
+-- 2.11 Codigos de e-mail (cadastro e recuperacao de senha, via Brevo)
+create table if not exists public.email_codes (
+  id         uuid primary key default gen_random_uuid(),
+  email      text not null,
+  purpose    text not null,
+  code_hash  text not null,
+  expires_at timestamptz not null,
+  attempts   integer not null default 0,
+  used_at    timestamptz,
+  created_at timestamptz not null default now()
+);
+create index if not exists email_codes_busca_idx
+  on public.email_codes (email, purpose, created_at desc);
+
+-- 2.12 Sequencias
 create sequence if not exists public.order_code_seq start 1;
 create sequence if not exists public.sale_code_seq  start 1;
 
@@ -929,6 +943,8 @@ alter table public.sale_items         enable row level security;
 alter table public.activity_log       enable row level security;
 alter table public.notifications      enable row level security;
 alter table public.notification_reads enable row level security;
+alter table public.email_codes        enable row level security;
+-- email_codes fica sem politica de proposito: so a funcao api alcanca
 
 drop policy if exists p_profiles_self on public.profiles;
 create policy p_profiles_self on public.profiles

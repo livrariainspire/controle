@@ -4,10 +4,11 @@
       <MarcaInspire />
       <hr class="divisor" />
 
-      <template v-if="!enviado">
+      <!-- ETAPA 1: dados -->
+      <template v-if="etapa === 'dados'">
         <h1 style="font-size:26px">Criar minha conta</h1>
         <p style="color:var(--texto);font-size:14px;margin:8px 0 22px;line-height:1.5">
-          Preencha seus dados. A administracao aprova o acesso e vincula voce a sua unidade.
+          Preencha seus dados. Enviaremos um codigo para o seu e-mail confirmar que ele e seu.
         </p>
 
         <div v-if="erro" class="aviso aviso-erro">{{ erro }}</div>
@@ -37,7 +38,7 @@
             </div>
           </div>
           <button class="btn btn-principal" :disabled="ocupado" style="margin-top:6px">
-            {{ ocupado ? 'Enviando...' : 'Enviar cadastro' }}
+            {{ ocupado ? 'Enviando codigo...' : 'Enviar codigo por e-mail' }}
           </button>
         </form>
 
@@ -46,13 +47,52 @@
         </div>
       </template>
 
-      <template v-else>
-        <h1 style="font-size:24px">Cadastro enviado</h1>
-        <p style="color:var(--texto);font-size:14px;margin:12px 0 22px;line-height:1.6">
-          A administracao vai revisar seus dados e liberar o acesso. Voce recebera o aviso
-          pelo WhatsApp informado.
+      <!-- ETAPA 2: codigo -->
+      <template v-else-if="etapa === 'codigo'">
+        <h1 style="font-size:24px">Confirmar o e-mail</h1>
+        <p style="color:var(--texto);font-size:14px;margin:8px 0 22px;line-height:1.5">
+          Enviamos um codigo de 6 digitos para <strong>{{ email }}</strong>.
+          Digite abaixo para concluir o cadastro.
         </p>
-        <NuxtLink to="/" class="btn btn-principal">Voltar para o inicio</NuxtLink>
+
+        <div v-if="erro" class="aviso aviso-erro">{{ erro }}</div>
+        <div v-if="reenviado" class="aviso aviso-ok">Codigo reenviado. Confira sua caixa de entrada.</div>
+
+        <form @submit.prevent="validar">
+          <div class="grupo">
+            <label class="rotulo" for="codigo">Codigo recebido</label>
+            <input id="codigo" ref="campoCodigo" :value="codigo" class="campo codigo"
+                   inputmode="numeric" autocomplete="one-time-code" maxlength="6"
+                   placeholder="000000" @input="digitarCodigo" />
+          </div>
+          <button class="btn btn-principal" :disabled="ocupado || codigo.length < 6">
+            {{ ocupado ? 'Validando...' : 'Confirmar e-mail' }}
+          </button>
+        </form>
+
+        <div class="linha-acoes" style="justify-content:center;margin-top:18px;gap:22px">
+          <button class="btn-linha" :disabled="espera > 0 || ocupado" @click="reenviar">
+            {{ espera > 0 ? `Reenviar em ${espera}s` : 'Reenviar codigo' }}
+          </button>
+          <button class="btn-linha" @click="voltar">Corrigir o e-mail</button>
+        </div>
+
+        <p class="pe-auth">
+          Nao encontrou? Procure na caixa de spam antes de pedir outro codigo.
+        </p>
+      </template>
+
+      <!-- ETAPA 3: pronto -->
+      <template v-else>
+        <div class="centro">
+          <div style="font-size:40px;line-height:1">&#9989;</div>
+          <h1 style="font-size:23px;margin-top:14px">E-mail confirmado</h1>
+          <p style="color:var(--texto);font-size:14px;margin:12px 0 22px;line-height:1.6">
+            Seu cadastro foi enviado. A administracao vai revisar seus dados, liberar o acesso
+            e vincular voce a sua unidade. Voce recebera o aviso pelo WhatsApp informado.
+          </p>
+          <NuxtLink to="/" class="btn btn-principal">Voltar para o inicio</NuxtLink>
+        </div>
       </template>
     </div>
   </div>
@@ -61,11 +101,27 @@
 <script setup lang="ts">
 definePageMeta({ layout: 'default' })
 
+const etapa = ref<'dados' | 'codigo' | 'pronto'>('dados')
 const nome = ref(''); const email = ref(''); const zap = ref('')
 const senha = ref(''); const senha2 = ref('')
-const erro = ref(''); const ocupado = ref(false); const enviado = ref(false)
+const codigo = ref('')
+const erro = ref(''); const ocupado = ref(false); const reenviado = ref(false)
+const espera = ref(0)
+const campoCodigo = ref<HTMLInputElement | null>(null)
+let relogio: any = null
 
 function digitarZap(e: Event) { zap.value = mascaraZap((e.target as HTMLInputElement).value) }
+function digitarCodigo(e: Event) {
+  codigo.value = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 6)
+  ;(e.target as HTMLInputElement).value = codigo.value
+}
+
+function contar() {
+  espera.value = 60
+  clearInterval(relogio)
+  relogio = setInterval(() => { if (--espera.value <= 0) clearInterval(relogio) }, 1000)
+}
+onUnmounted(() => clearInterval(relogio))
 
 async function cadastrar() {
   erro.value = ''
@@ -73,18 +129,62 @@ async function cadastrar() {
   if (soDigitos(zap.value).length < 10) { erro.value = 'Informe o WhatsApp com DDD.'; return }
 
   ocupado.value = true
-  const { error } = await useSupa().auth.signUp({
-    email: email.value.trim(),
-    password: senha.value,
-    options: { data: { full_name: nome.value.trim(), whatsapp: soDigitos(zap.value) } }
-  })
-  ocupado.value = false
-  if (error) {
-    erro.value = error.message.includes('already')
-      ? 'Este e-mail ja tem cadastro. Use "Esqueci minha senha".'
-      : 'Nao foi possivel cadastrar: ' + error.message
-    return
+  try {
+    await chamarApi('/cadastro/codigo', { email: email.value.trim() })
+    etapa.value = 'codigo'
+    codigo.value = ''
+    contar()
+    await nextTick()
+    campoCodigo.value?.focus()
+  } catch (e: any) {
+    erro.value = e.message
+  } finally {
+    ocupado.value = false
   }
-  enviado.value = true
 }
+
+async function validar() {
+  erro.value = ''; reenviado.value = false; ocupado.value = true
+  try {
+    await chamarApi('/cadastro/confirmar', {
+      email: email.value.trim(),
+      code: codigo.value,
+      full_name: nome.value.trim(),
+      whatsapp: soDigitos(zap.value),
+      password: senha.value
+    })
+    etapa.value = 'pronto'
+  } catch (e: any) {
+    erro.value = e.message
+  } finally {
+    ocupado.value = false
+  }
+}
+
+async function reenviar() {
+  erro.value = ''; reenviado.value = false; ocupado.value = true
+  try {
+    await chamarApi('/cadastro/codigo', { email: email.value.trim() })
+    reenviado.value = true
+    contar()
+  } catch (e: any) {
+    erro.value = e.message
+  } finally {
+    ocupado.value = false
+  }
+}
+
+function voltar() { etapa.value = 'dados'; erro.value = ''; codigo.value = '' }
 </script>
+
+<style scoped>
+.codigo {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: .38em;
+  text-indent: .38em;
+  padding: 16px 12px;
+  font-variant-numeric: tabular-nums;
+}
+</style>

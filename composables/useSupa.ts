@@ -16,7 +16,7 @@ export function configOk(): boolean {
   return !!cfg.SUPABASE_URL && !String(cfg.SUPABASE_URL).includes('COLE_AQUI')
 }
 
-/** Chama a Edge Function "api" com a sessao do usuario logado. */
+/** Chama a Edge Function "api". Envia a sessao quando existe. */
 export async function chamarApi(rota: string, corpo: Record<string, any> = {}) {
   const supa = useSupa()
   const { data: { session } } = await supa.auth.getSession()
@@ -26,7 +26,7 @@ export async function chamarApi(rota: string, corpo: Record<string, any> = {}) {
     headers: {
       'Content-Type': 'application/json',
       apikey: cfg.SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${session?.access_token ?? ''}`
+      Authorization: `Bearer ${session?.access_token ?? cfg.SUPABASE_ANON_KEY}`
     },
     body: JSON.stringify(corpo)
   })

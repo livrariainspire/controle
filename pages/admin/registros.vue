@@ -56,7 +56,7 @@ const rotuloAcao = (a: string) => ({
   usuario_excluido: 'Usuario excluido',
   senha_redefinida: 'Senha redefinida',
   link_recuperacao: 'Link de recuperacao gerado',
-  email_confirmado: 'E-mail confirmado'
+  senha_recuperada: 'Senha recuperada pelo proprio usuario'
 }[a] ?? a)
 
 const filtrados = computed(() => {

@@ -1,4 +1,4 @@
-const publicas = ['/', '/cadastro', '/recuperar', '/nova-senha', '/aguardando', '/confirmado']
+const publicas = ['/', '/cadastro', '/recuperar', '/aguardando']
 
 export default defineNuxtRouteMiddleware(async (para) => {
   if (!import.meta.client) return
