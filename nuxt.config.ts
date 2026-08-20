@@ -10,7 +10,7 @@ export default defineNuxtConfig({
     baseURL: base,
     buildAssetsDir: 'assets',
     head: {
-      title: 'Presence · Livraria Inspire',
+      title: 'Order Book · Livraria Inspire',
       meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },

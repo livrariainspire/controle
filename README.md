@@ -1,4 +1,4 @@
-# Presence — Livraria Inspire
+# Order Book — Livraria Inspire
 
 Sistema de gestao de pedidos, estoque e vendas da Livraria Inspire.
 

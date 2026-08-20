@@ -13,7 +13,7 @@
     <div class="painel">
       <div class="painel-topo"><h2>1. Produtos vendidos</h2></div>
       <div class="painel-corpo">
-        <BuscaProdutos somente-com-estoque :unidade-id="unidadeId" @escolher="adicionar" />
+        <BuscaProdutos somente-com-estoque :unidade-id="unidadeId" :escolhidos="carrinho.map((i: any) => i.id)" @escolher="adicionar" />
       </div>
     </div>
 

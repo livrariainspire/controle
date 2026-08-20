@@ -14,9 +14,10 @@
     </div>
 
     <div class="painel">
-      <div class="painel-topo"><h2>1. Escolher os produtos</h2></div>
+      <div class="painel-topo"><h2>1. Escolher os produtos</h2>
+        <span class="mini">Tudo o que sua unidade pode pedir</span></div>
       <div class="painel-corpo">
-        <BuscaProdutos @escolher="adicionar" />
+        <BuscaProdutos :escolhidos="carrinho.map((i: any) => i.id)" @escolher="adicionar" />
       </div>
     </div>
 

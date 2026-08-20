@@ -366,7 +366,7 @@ begin
    where id = p_user;
 
   perform public.fn_notify(p_user, null, null, 'Seu acesso foi liberado',
-    'Voce ja pode usar o sistema Presence da Livraria Inspire.', 'acesso', null);
+    'Voce ja pode usar o sistema Order Book da Livraria Inspire.', 'acesso', null);
   perform public.log_action('usuario_aprovado','profiles',p_user,
     jsonb_build_object('role',p_role,'unit_id',p_unit));
 end $$;
