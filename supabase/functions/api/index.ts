@@ -2,13 +2,13 @@
 //  LIVRARIA INSPIRE — ORDER BOOK
 //  Edge Function: "api"  ·  Versao 3.0
 //
-//  1) CODIGOS DE E-MAIL (rotas publicas)
-//     Gera um codigo de 6 digitos, guarda no banco e envia pela API do
-//     Brevo. Usado no cadastro e na recuperacao de senha.
-//     O Supabase nao envia nenhum e-mail.
+//  1) CÓDIGOS DE E-MAIL (rotas públicas)
+//     Gera um código de 6 dígitos, guarda no banco e envia pela API do
+//     Brevo. Usado no cadastro e na recuperação de senha.
+//     O Supabase não envia nenhum e-mail.
 //
-//  2) ADMINISTRACAO DE CONTAS (rotas protegidas)
-//     Criar usuario, trocar senha de qualquer pessoa, excluir conta.
+//  2) ADMINISTRAÇÃO DE CONTAS (rotas protegidas)
+//     Criar usuário, trocar senha de qualquer pessoa, excluir conta.
 //
 //  Segredos necessarios em Edge Functions > Secrets:
 //     BREVO_API_KEY      chave v3 da API do Brevo
@@ -86,11 +86,11 @@ function corpoEmail(codigo: string, finalidade: string) {
     + '<p style="margin:0 0 4px;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#a08e86">Livraria Inspire</p>'
     + '<h1 style="margin:0 0 18px;font-size:22px;color:#2c2320">' + titulo + '</h1>'
     + '<p style="margin:0 0 22px;font-size:15px;line-height:1.6;color:#6f5d55">' + frase + '</p>'
-    + '<p style="margin:0 0 8px;font-size:13px;color:#6f5d55">Seu codigo:</p>'
+    + '<p style="margin:0 0 8px;font-size:13px;color:#6f5d55">Seu código:</p>'
     + '<div style="background:#fdece6;border-radius:12px;padding:18px;text-align:center;margin-bottom:22px">'
     + '<span style="font-size:34px;font-weight:bold;letter-spacing:10px;color:#d9451d">' + código + '</span></div>'
-    + '<p style="margin:0 0 6px;font-size:14px;line-height:1.6;color:#6f5d55">Digite esse codigo na tela do sistema para continuar. Ele vale por ' + VALIDADE_MIN + ' minutos.</p>'
-    + '<p style="margin:0;font-size:13px;line-height:1.6;color:#a08e86">Se nao foi voce quem pediu, pode ignorar esta mensagem.</p>'
+    + '<p style="margin:0 0 6px;font-size:14px;line-height:1.6;color:#6f5d55">Digite esse código na tela do sistema para continuar. Ele vale por ' + VALIDADE_MIN + ' minutos.</p>'
+    + '<p style="margin:0;font-size:13px;line-height:1.6;color:#a08e86">Se não foi você quem pediu, pode ignorar esta mensagem.</p>'
     + '</td></tr></table>'
     + '<p style="margin:20px 0 0;font-size:12px;color:#a08e86">Order Book &middot; Livraria Inspire</p>'
     + '</td></tr></table></body></html>';
@@ -112,8 +112,8 @@ async function enviarBrevo(email: string, codigo: string, finalidade: string) {
       sender: { name: BREVO_NAME, email: BREVO_SENDER },
       to: [{ email }],
       subject: finalidade === "cadastro"
-        ? codigo + " e o seu código de confirmação"
-        : codigo + " e o seu código para criar uma nova senha",
+        ? codigo + " é o seu código de confirmação"
+        : codigo + " é o seu código para criar uma nova senha",
       htmlContent: corpoEmail(codigo, finalidade),
     }),
   });
@@ -125,7 +125,7 @@ async function enviarBrevo(email: string, codigo: string, finalidade: string) {
 }
 
 // ---------------------------------------------------------------------
-// Codigos
+// Códigos
 // ---------------------------------------------------------------------
 async function criarEEnviarCodigo(email: string, finalidade: string) {
   const desde = new Date(Date.now() - 3600000).toISOString();
@@ -134,7 +134,7 @@ async function criarEEnviarCodigo(email: string, finalidade: string) {
     .eq("email", email).eq("purpose", finalidade).gte("created_at", desde);
 
   if ((count ?? 0) >= MAX_ENVIOS_HORA) {
-    throw new Error("Você pediu codigos demais na última hora. Aguarde um pouco e tente de novo.");
+    throw new Error("Você pediu códigos demais na última hora. Aguarde um pouco e tente de novo.");
   }
 
   await admin.from("email_codes")
@@ -232,7 +232,7 @@ Deno.serve(async (req) => {
       const email = normalizaEmail(corpo.email);
       if (!emailValido(email)) return json({ error: "Informe um e-mail válido." }, 400);
       if (await perfilPorEmail(email)) {
-        return json({ error: 'Este e-mail ja tem cadastro. Use "Esqueci minha senha".' }, 400);
+        return json({ error: 'Este e-mail já tem cadastro. Use "Esqueci minha senha".' }, 400);
       }
       await criarEEnviarCodigo(email, "cadastro");
       return json({ ok: true });
@@ -245,7 +245,7 @@ Deno.serve(async (req) => {
       if (!emailValido(email)) return json({ error: "Informe um e-mail válido." }, 400);
       if (!full_name || String(full_name).trim().length < 3) return json({ error: "Informe seu nome completo." }, 400);
       if (!password || String(password).length < 8) return json({ error: "A senha precisa ter ao menos 8 caracteres." }, 400);
-      if (await perfilPorEmail(email)) return json({ error: "Este e-mail ja tem cadastro." }, 400);
+      if (await perfilPorEmail(email)) return json({ error: "Este e-mail já tem cadastro." }, 400);
 
       const problema = await conferirCodigo(email, code, "cadastro");
       if (problema) return json({ error: problema }, 400);
@@ -263,7 +263,7 @@ Deno.serve(async (req) => {
     if (rota === "/senha/codigo") {
       const email = normalizaEmail(corpo.email);
       if (!emailValido(email)) return json({ error: "Informe um e-mail válido." }, 400);
-      // resposta igual exista ou nao a conta, para nao revelar cadastros
+      // resposta igual exista ou não a conta, para não revelar cadastros
       if (await perfilPorEmail(email)) await criarEEnviarCodigo(email, "recuperacao");
       return json({ ok: true });
     }
@@ -289,7 +289,7 @@ Deno.serve(async (req) => {
       return json({ ok: true });
     }
 
-    // ---------- ROTAS DA ADMINISTRACAO ----------
+    // ---------- ROTAS DA ADMINISTRAÇÃO ----------
     const guarda = await exigirAdmin(req);
     if ("error" in guarda) return json({ error: (guarda as any).error }, 403);
     const { user, perfil } = guarda as any;

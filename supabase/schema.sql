@@ -370,10 +370,10 @@ language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_admin() then raise exception 'Apenas o administrador pode aprovar cadastros.'; end if;
   if p_role in ('igreja','ponto') and p_unit is null then
-    raise exception 'Selecione a unidade para este perfil.'; end if;
+    raise exception 'Selecione a filial para este perfil.'; end if;
   if p_role in ('igreja','ponto') and not exists (
     select 1 from public.units u where u.id = p_unit and u.type::text = p_role::text) then
-    raise exception 'A unidade escolhida nao corresponde ao perfil selecionado.'; end if;
+    raise exception 'A filial escolhida não corresponde ao perfil selecionado.'; end if;
 
   update public.profiles
      set role = p_role,
@@ -382,7 +382,7 @@ begin
    where id = p_user;
 
   perform public.fn_notify(p_user, null, null, 'Seu acesso foi liberado',
-    'Voce ja pode usar o sistema Order Book da Livraria Inspire.', 'acesso', null);
+    'Você já pode usar o sistema Order Book da Livraria Inspire.', 'acesso', null);
   perform public.log_action('usuario_aprovado','profiles',p_user,
     jsonb_build_object('role',p_role,'unit_id',p_unit));
 end $$;
@@ -408,8 +408,8 @@ declare v_order uuid; v_unit uuid; v_role user_role; v_item jsonb; v_title text;
         v_count int := 0; v_code text; v_unome text;
 begin
   v_role := public.my_role(); v_unit := public.my_unit();
-  if v_role not in ('igreja','ponto') then raise exception 'Apenas unidades podem criar pedidos.'; end if;
-  if v_unit is null then raise exception 'Seu usuario nao esta vinculado a uma unidade.'; end if;
+  if v_role not in ('igreja','ponto') then raise exception 'Apenas filiais podem criar pedidos.'; end if;
+  if v_unit is null then raise exception 'Seu usuário não está vinculado a uma filial.'; end if;
   if p_items is null or jsonb_array_length(p_items) = 0 then
     raise exception 'Inclua ao menos um item no pedido.'; end if;
   if p_pickup is null then
@@ -424,7 +424,7 @@ begin
   for v_item in select * from jsonb_array_elements(p_items) loop
     select title into v_title from public.products
      where id = (v_item->>'product_id')::uuid and active;
-    if v_title is null then raise exception 'Produto indisponivel no catalogo.'; end if;
+    if v_title is null then raise exception 'Produto indisponível no catálogo.'; end if;
     insert into public.order_items (order_id, product_id, product_title, qty_requested)
     values (v_order, (v_item->>'product_id')::uuid, v_title, (v_item->>'qty')::int);
     v_count := v_count + 1;
@@ -452,7 +452,7 @@ begin
    where id=p_order and status='fila'
   returning unit_id, code into v_unit, v_code;
   get diagnostics v_rows = row_count;
-  if v_rows = 0 then raise exception 'Este pedido ja foi puxado por outro atendente.'; end if;
+  if v_rows = 0 then raise exception 'Este pedido já foi puxado por outro atendente.'; end if;
 
   perform public.msg_sistema(p_order, public.my_name() || ' assumiu o atendimento deste pedido.');
   perform public.fn_notify(null, v_unit, null, 'Pedido em atendimento',
@@ -465,13 +465,13 @@ create or replace function public.fn_release_order(p_order uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare v_rows int;
 begin
-  if not public.is_staff() then raise exception 'Sem permissao.'; end if;
+  if not public.is_staff() then raise exception 'Sem permissão.'; end if;
   update public.orders
      set status='fila', attendant_id=null, attendant_name=null, claimed_at=null
    where id=p_order and status in ('em_atendimento','em_espera')
      and (attendant_id = auth.uid() or public.is_admin());
   get diagnostics v_rows = row_count;
-  if v_rows = 0 then raise exception 'Nao foi possivel devolver este pedido.'; end if;
+  if v_rows = 0 then raise exception 'Não foi possível devolver este pedido.'; end if;
 
   perform public.msg_sistema(p_order, public.my_name() || ' devolveu o pedido para a fila.');
   perform public.fn_notify(null, null, 'atendente', 'Pedido de volta na fila',
@@ -487,7 +487,7 @@ begin
   if not public.is_admin() then raise exception 'Apenas o administrador pode redirecionar pedidos.'; end if;
   select coalesce(nullif(full_name,''), email) into v_name from public.profiles
    where id=p_attendant and role='atendente' and status='aprovado';
-  if v_name is null then raise exception 'Atendente invalido.'; end if;
+  if v_name is null then raise exception 'Atendente inválido.'; end if;
 
   update public.orders
      set attendant_id=p_attendant, attendant_name=v_name,
@@ -495,9 +495,9 @@ begin
          claimed_at=coalesce(claimed_at, now())
    where id=p_order and status in ('fila','em_atendimento','em_espera')
   returning code into v_code;
-  if v_code is null then raise exception 'Este pedido nao pode ser redirecionado.'; end if;
+  if v_code is null then raise exception 'Este pedido não pode ser redirecionado.'; end if;
 
-  perform public.msg_sistema(p_order, 'A administracao redirecionou este pedido para ' || v_name || '.');
+  perform public.msg_sistema(p_order, 'A administração redirecionou este pedido para ' || v_name || '.');
   perform public.fn_notify(p_attendant, null, null, 'Pedido redirecionado para voce',
     v_code || ' passou a ser seu atendimento.', 'pedido', p_order);
   perform public.log_action('pedido_redirecionado','orders',p_order,
@@ -518,7 +518,7 @@ begin
          removed_by_name = public.my_name(), removed_reason = p_reason, qty_sent = 0
    where id = p_item and removed = false
   returning order_id, product_title, qty_requested into v_order, v_title, v_qty;
-  if v_order is null then raise exception 'Item nao encontrado ou ja retirado.'; end if;
+  if v_order is null then raise exception 'Item não encontrado ou já retirado.'; end if;
 
   select unit_id, code into v_unit, v_code from public.orders where id = v_order;
 
@@ -536,7 +536,7 @@ create or replace function public.fn_restore_order_item(p_item uuid) returns voi
 language plpgsql security definer set search_path = public as $$
 declare v_order uuid; v_title text;
 begin
-  if not public.is_staff() then raise exception 'Sem permissao.'; end if;
+  if not public.is_staff() then raise exception 'Sem permissão.'; end if;
   update public.order_items
      set removed = false, removed_at = null, removed_by = null,
          removed_by_name = null, removed_reason = null
@@ -559,11 +559,11 @@ declare
   v_code text; v_att uuid; v_espera uuid; v_espera_code text;
   v_falta int; v_enviados int := 0; r record;
 begin
-  if not public.is_staff() then raise exception 'Sem permissao.'; end if;
+  if not public.is_staff() then raise exception 'Sem permissão.'; end if;
   select unit_id, status, code, attendant_id
     into v_unit, v_status, v_code, v_att
     from public.orders where id=p_order;
-  if v_unit is null then raise exception 'Pedido nao encontrado.'; end if;
+  if v_unit is null then raise exception 'Pedido não encontrado.'; end if;
   if v_status <> 'em_atendimento' then
     raise exception 'O pedido precisa estar em atendimento para ser enviado.'; end if;
 
@@ -575,16 +575,19 @@ begin
     returning product_id into v_prod;
 
     if v_prod is not null and v_qty > 0 then
-      insert into public.stock (unit_id, product_id, qty, updated_at)
-      values (v_unit, v_prod, v_qty, now())
-      on conflict (unit_id, product_id)
-      do update set qty = public.stock.qty + excluded.qty, updated_at = now();
+      -- so o Ponto de Partida mantem estoque no sistema
+      if v_tipo = 'ponto' then
+        insert into public.stock (unit_id, product_id, qty, updated_at)
+        values (v_unit, v_prod, v_qty, now())
+        on conflict (unit_id, product_id)
+        do update set qty = public.stock.qty + excluded.qty, updated_at = now();
+      end if;
       v_enviados := v_enviados + v_qty;
     end if;
   end loop;
 
   if v_enviados = 0 then
-    raise exception 'Informe ao menos um item enviado. Se nao ha nada a enviar, cancele o pedido.';
+    raise exception 'Informe ao menos um item enviado. Se não há nada a enviar, cancele o pedido.';
   end if;
 
   if p_criar_espera and exists (
@@ -619,7 +622,7 @@ begin
       'Pedido em espera criado a partir de ' || v_code || '.' || coalesce(' ' || p_espera_note, ''));
     perform public.fn_notify(null, v_unit, null, 'Pedido em espera',
       v_espera_code || ' guarda o que faltou de ' || v_code || '.', 'pedido', v_espera);
-    perform public.fn_notify(coalesce(v_att, auth.uid()), null, null, 'Pedido em espera com voce',
+    perform public.fn_notify(coalesce(v_att, auth.uid()), null, null, 'Pedido em espera com você',
       v_espera_code || ' aguarda a chegada do produto.', 'pedido', v_espera);
   end if;
 
@@ -640,22 +643,22 @@ language plpgsql security definer set search_path = public as $$
 declare v_unit uuid; v_code text; v_att uuid; v_rows int;
 begin
   select unit_id, code, attendant_id into v_unit, v_code, v_att from public.orders where id = p_order;
-  if v_unit is null then raise exception 'Pedido nao encontrado.'; end if;
+  if v_unit is null then raise exception 'Pedido não encontrado.'; end if;
   if not ((public.my_unit() = v_unit and public.my_role() in ('igreja','ponto')) or public.is_admin()) then
-    raise exception 'Apenas a unidade do pedido pode confirmar o recebimento.'; end if;
+    raise exception 'Apenas a filial do pedido pode confirmar o recebimento.'; end if;
 
   update public.orders
      set status = 'finalizado', received_at = now(),
          received_by = auth.uid(), received_by_name = public.my_name()
    where id = p_order and status = 'enviado';
   get diagnostics v_rows = row_count;
-  if v_rows = 0 then raise exception 'Este pedido nao esta aguardando confirmacao.'; end if;
+  if v_rows = 0 then raise exception 'Este pedido não está aguardando confirmação.'; end if;
 
   perform public.msg_sistema(p_order,
     public.my_name() || ' confirmou o recebimento. Pedido finalizado.' || coalesce(' ' || p_note, ''));
   if v_att is not null then
     perform public.fn_notify(v_att, null, null, 'Recebimento confirmado',
-      v_code || ' foi recebido pela unidade e esta finalizado.', 'pedido', p_order);
+      v_code || ' foi recebido pela filial e está finalizado.', 'pedido', p_order);
   end if;
   perform public.log_action('pedido_recebido','orders',p_order, jsonb_build_object('observacao',p_note));
 end $$;
@@ -673,7 +676,7 @@ begin
          claimed_at=coalesce(claimed_at, now())
    where id=p_order and status='em_espera'
   returning unit_id, code into v_unit, v_code;
-  if v_code is null then raise exception 'Este pedido nao esta em espera.'; end if;
+  if v_code is null then raise exception 'Este pedido não está em espera.'; end if;
 
   perform public.msg_sistema(p_order, public.my_name() || ' retomou o pedido. O produto chegou.');
   perform public.fn_notify(null, v_unit, null, 'Pedido retomado',
@@ -687,14 +690,14 @@ language plpgsql security definer set search_path = public as $$
 declare v_unit uuid; v_code text; v_att uuid; v_rows int;
 begin
   select unit_id, code, attendant_id into v_unit, v_code, v_att from public.orders where id=p_order;
-  if v_unit is null then raise exception 'Pedido nao encontrado.'; end if;
+  if v_unit is null then raise exception 'Pedido não encontrado.'; end if;
   if not (public.is_staff() or (public.my_unit() = v_unit and public.my_role() in ('igreja','ponto'))) then
-    raise exception 'Sem permissao para cancelar este pedido.'; end if;
+    raise exception 'Sem permissão para cancelar este pedido.'; end if;
 
   update public.orders set status='cancelado', cancel_reason=p_reason, canceled_at=now()
    where id=p_order and status in ('fila','em_atendimento','em_espera');
   get diagnostics v_rows = row_count;
-  if v_rows = 0 then raise exception 'Este pedido nao pode mais ser cancelado.'; end if;
+  if v_rows = 0 then raise exception 'Este pedido não pode mais ser cancelado.'; end if;
 
   perform public.msg_sistema(p_order,
     public.my_name() || ' cancelou o pedido.' || coalesce(' Motivo: ' || p_reason, ''));
@@ -714,11 +717,11 @@ declare v_unit uuid; v_att uuid; v_code text; v_msg uuid; v_role user_role;
 begin
   if p_body is null or length(trim(p_body)) = 0 then raise exception 'Escreva uma mensagem.'; end if;
   select unit_id, attendant_id, code into v_unit, v_att, v_code from public.orders where id = p_order;
-  if v_unit is null then raise exception 'Pedido nao encontrado.'; end if;
+  if v_unit is null then raise exception 'Pedido não encontrado.'; end if;
 
   v_role := public.my_role();
   if not (public.is_staff() or public.my_unit() = v_unit) then
-    raise exception 'Sem permissao para conversar neste pedido.'; end if;
+    raise exception 'Sem permissão para conversar neste pedido.'; end if;
 
   insert into public.order_messages (order_id, author_id, author_name, author_role, body)
   values (p_order, auth.uid(), public.my_name(), v_role, trim(p_body))
@@ -774,10 +777,14 @@ declare
   v_sale uuid; v_unit uuid; v_item jsonb; v_qty int; v_price numeric;
   v_prod uuid; v_title text; v_have int; v_total numeric := 0;
 begin
-  if public.my_role() not in ('igreja','ponto') then
-    raise exception 'Apenas unidades registram vendas.'; end if;
+  if public.my_role() = 'igreja' then
+    raise exception 'A Igreja da Rede não registra vendas. O pedido encerra na confirmação do recebimento.';
+  end if;
+  if public.my_role() <> 'ponto' then
+    raise exception 'Apenas o Ponto de Partida registra vendas.';
+  end if;
   v_unit := public.my_unit();
-  if v_unit is null then raise exception 'Seu usuario nao esta vinculado a uma unidade.'; end if;
+  if v_unit is null then raise exception 'Seu usuário não está vinculado a uma filial.'; end if;
   if p_items is null or jsonb_array_length(p_items) = 0 then
     raise exception 'Inclua ao menos um item na venda.'; end if;
 
@@ -795,7 +802,7 @@ begin
     select title into v_title from public.products where id = v_prod;
     select qty into v_have from public.stock where unit_id=v_unit and product_id=v_prod;
     if coalesce(v_have,0) < v_qty then
-      raise exception 'Estoque insuficiente de "%": voce tem % e tentou vender %.',
+      raise exception 'Estoque insuficiente de "%": você tem % e tentou vender %.',
         coalesce(v_title,'produto'), coalesce(v_have,0), v_qty;
     end if;
 
@@ -811,6 +818,27 @@ begin
   perform public.log_action('venda_registrada','sales',v_sale, jsonb_build_object('total',v_total));
   return v_sale;
 end $$;
+
+-- 5.16b Entregas ja feitas a uma filial (usado pela Igreja da Rede)
+create or replace function public.fn_entregas_filial(p_unit uuid default null)
+returns table (
+  product_id uuid, product_title text, product_type product_type,
+  photo_url text, author text, edition text,
+  total_recebido bigint, ultima_entrega timestamptz
+)
+language sql stable security definer set search_path = public as $$
+  select p.id, p.title, p.type, p.photo_url, p.author, p.edition,
+         sum(i.qty_sent)::bigint, max(o.completed_at)
+    from public.order_items i
+    join public.orders o   on o.id = i.order_id
+    join public.products p on p.id = i.product_id
+   where i.qty_sent > 0
+     and o.status in ('enviado','finalizado')
+     and o.unit_id = coalesce(p_unit, public.my_unit())
+     and (public.is_staff() or o.unit_id = public.my_unit())
+   group by p.id, p.title, p.type, p.photo_url, p.author, p.edition
+   order by p.title;
+$$;
 
 -- 5.17 Relatorios
 create or replace function public.fn_report_sales(
@@ -861,14 +889,14 @@ begin
   if not public.is_admin() then raise exception 'Apenas o administrador pode excluir produtos.'; end if;
 
   select title into v_title from public.products where id = p_id;
-  if v_title is null then raise exception 'Produto nao encontrado.'; end if;
+  if v_title is null then raise exception 'Produto não encontrado.'; end if;
 
   select count(*) into v_pedidos from public.order_items where product_id = p_id;
   select count(*) into v_vendas  from public.sale_items  where product_id = p_id;
   select count(*) into v_estoque from public.stock       where product_id = p_id and qty > 0;
 
   if v_pedidos > 0 or v_vendas > 0 or v_estoque > 0 then
-    raise exception 'Nao da para excluir "%": ja aparece em % pedido(s), % venda(s) e % unidade(s) com estoque. Desative o produto para tira-lo da lista sem perder o historico.',
+    raise exception 'Não dá para excluir "%": já aparece em % pedido(s), % venda(s) e % filial(is) com estoque. Desative o produto para tirá-lo da lista sem perder o histórico.',
       v_title, v_pedidos, v_vendas, v_estoque;
   end if;
 
@@ -883,10 +911,10 @@ create or replace function public.fn_delete_unit(p_id uuid) returns void
 language plpgsql security definer set search_path = public as $$
 declare v_name text; v_pessoas int; v_pedidos int; v_vendas int; v_estoque int;
 begin
-  if not public.is_admin() then raise exception 'Apenas o administrador pode excluir unidades.'; end if;
+  if not public.is_admin() then raise exception 'Apenas o administrador pode excluir filiais.'; end if;
 
   select name into v_name from public.units where id = p_id;
-  if v_name is null then raise exception 'Unidade nao encontrada.'; end if;
+  if v_name is null then raise exception 'Filial não encontrada.'; end if;
 
   select count(*) into v_pessoas from public.profiles where unit_id = p_id;
   select count(*) into v_pedidos from public.orders   where unit_id = p_id;
@@ -894,12 +922,12 @@ begin
   select count(*) into v_estoque from public.stock    where unit_id = p_id and qty > 0;
 
   if v_pedidos > 0 or v_vendas > 0 or v_estoque > 0 then
-    raise exception 'Nao da para excluir "%": tem % pedido(s), % venda(s) e % produto(s) em estoque. Desative a unidade para tira-la de uso sem perder o historico.',
+    raise exception 'Não dá para excluir "%": tem % pedido(s), % venda(s) e % produto(s) em estoque. Desative a filial para tirá-la de uso sem perder o histórico.',
       v_name, v_pedidos, v_vendas, v_estoque;
   end if;
 
   if v_pessoas > 0 then
-    raise exception 'Nao da para excluir "%": ainda ha % usuario(s) vinculado(s). Troque a unidade dessas pessoas ou exclua os usuarios antes.',
+    raise exception 'Não dá para excluir "%": ainda há % usuário(s) vinculado(s). Troque a filial dessas pessoas ou exclua os usuários antes.',
       v_name, v_pessoas;
   end if;
 
@@ -1082,6 +1110,7 @@ grant execute on function
   public.fn_my_notifications(),
   public.fn_read_notifications(uuid[]),
   public.fn_create_sale(jsonb,text,text),
+  public.fn_entregas_filial(uuid),
   public.fn_report_sales(date,date),
   public.fn_report_stock(),
   public.my_role(), public.my_unit(), public.is_admin(), public.is_staff()

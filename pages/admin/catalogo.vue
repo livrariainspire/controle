@@ -44,7 +44,7 @@
         <label class="rotulo">Tipo de produto</label>
         <select v-model="form.type" class="campo">
           <option value="livro">Livro</option>
-          <option value="item">Outro item (quadro, oleo de unção, memorial...)</option>
+          <option value="item">Outro item (quadro, óleo de unção, memorial...)</option>
         </select>
       </div>
       <div class="grupo">
@@ -134,7 +134,7 @@ async function excluir() {
   const { error } = await supa.rpc('fn_delete_product', { p_id: form.value.id })
   ocupado.value = false
   if (error) { erro.value = true; msg.value = error.message; form.value = null; return }
-  erro.value = false; msg.value = 'Produto excluido.'
+  erro.value = false; msg.value = 'Produto excluído.'
   form.value = null; carregar()
 }
 

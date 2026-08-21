@@ -50,6 +50,15 @@ const links = computed(() => {
     { nome: 'Relatórios', para: '/relatorios' },
     { nome: 'Minha conta', para: '/conta' }
   ]
+  // Igreja da Rede apenas recebe: sem estoque e sem venda
+  if (r === 'igreja') return [
+    { nome: 'Painel', para: '/painel' },
+    { nome: 'Fazer pedido', para: '/pedidos/novo' },
+    { nome: 'Meus pedidos', para: '/pedidos' },
+    { nome: 'Material recebido', para: '/recebidos' },
+    { nome: 'Minha conta', para: '/conta' }
+  ]
+  // Ponto de Partida controla estoque e registra vendas
   return [
     { nome: 'Painel', para: '/painel' },
     { nome: 'Fazer pedido', para: '/pedidos/novo' },

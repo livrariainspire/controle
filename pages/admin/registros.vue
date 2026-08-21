@@ -53,7 +53,7 @@ const rotuloAcao = (a: string) => ({
   usuario_aprovado: 'Usuário aprovado',
   usuario_status: 'Situação do usuário alterada',
   usuario_criado: 'Usuário criado',
-  usuario_excluido: 'Usuário excluido',
+  usuario_excluido: 'Usuário excluído',
   senha_redefinida: 'Senha redefinida',
   link_recuperacao: 'Link de recuperação gerado',
   senha_recuperada: 'Senha recuperada pelo próprio usuário'
